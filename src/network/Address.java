@@ -25,17 +25,18 @@ public class Address {
 	
 //---  Operations   ---------------------------------------------------------------------------
 
-	public String prefixMatch(Address other) {
+	public Address prefixMatch(Address other) {
 		StringBuilder sb = new StringBuilder();
-		for(int i = 0; i < points.size(); i++) {
+		sb.append(points.get(0));
+		for(int i = 1; i < points.size(); i++) {
 			if(points.get(i).equals(other.getAddressPiece(i))) {
-				sb.append(points.get(i));
+				sb.append("." + points.get(i));
 			}
 			else {
-				return sb.toString();
+				break;
 			}
 		}
-		return sb.toString();
+		return new Address(sb.toString());
 	}
 	
 //---  Getter Methods   -----------------------------------------------------------------------

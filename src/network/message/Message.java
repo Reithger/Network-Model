@@ -2,30 +2,32 @@ package network.message;
 
 import java.util.LinkedList;
 
+import network.Address;
+
 public class Message {
 	
 //---  Instance Variables   -------------------------------------------------------------------
 
-	private LinkedList<String> target;
+	private LinkedList<Address> target;
 	private String body;
 	
 //---  Constructors   -------------------------------------------------------------------------
 	
 	public Message (String inTarget, String inBody) {
-		target = new LinkedList<String>();
-		target.add(inTarget);
+		target = new LinkedList<Address>();
+		target.add(new Address(inTarget));
 		body = inBody;
 	}
 
 //---  Operations   ---------------------------------------------------------------------------
 	
-	public void addDestination(String dest) {
+	public void addDestination(Address dest) {
 		target.add(dest);
 	}
 		
 //---  Getter Methods   -----------------------------------------------------------------------
 	
-	public String getDestination() {
+	public Address getDestination() {
 		return target.poll();
 	}
 	
@@ -36,7 +38,7 @@ public class Message {
 	public int getSize() {
 		int size = body.length();
 		for(int i = 0; i < target.size(); i++) {
-			size += target.get(i).length();
+			size += target.get(i).toString().length();
 		}
 		return size;
 	}
@@ -46,7 +48,7 @@ public class Message {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("Destination Chain: ");
-		for (String s : target) {
+		for (Address s : target) {
 			sb.append(s + " -> ");
 		}
 		sb.append("\n");

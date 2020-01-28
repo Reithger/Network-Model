@@ -25,11 +25,11 @@ public class Route {
 		distance = a.distance(b);
 	}
 	
-	public boolean send(Message m, String address) {
-		return(pick(address, false).receive(m, time()));
+	public boolean send(Message m, Address address) {
+		return(pick(address.toString(), false).receive(m, time()));
 	}
 	
-	private double time() {
+	public double time() {
 		return speed * distance;
 	}
 	

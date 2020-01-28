@@ -1,7 +1,7 @@
-package network.device;
+package network;
 
-import network.Node;
 import network.message.Message;
+import network.protocol.device.MessagePattern;
 
 public class Device extends Node{
 	
@@ -21,6 +21,11 @@ public class Device extends Node{
 	public void sendMessage(String target, String body) {
 		Message m = new Message(target, body);
 		send(m);
+	}
+	
+	@Override
+	public boolean endpoint() {
+		return true;
 	}
 
 //---  Mechanics   ----------------------------------------------------------------------------

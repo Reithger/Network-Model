@@ -14,8 +14,7 @@ class NetworkTest {
 	void test() {
 		Network net = new Network();
 		Node nodeA = new Node("A", "1", 0, 0);
-		Node nodeB = new Node("B", "1.1", 0, 0);
-		nodeB.setX(5);
+		Node nodeB = new Node("B", "1.1", 5, 0);
 		Route rt = new Route(1);
 		rt.assign(nodeA, nodeB);
 		System.out.println(nodeA);
@@ -25,6 +24,10 @@ class NetworkTest {
 		net.addNode(nodeB);
 		net.addRoute(rt);
 		System.out.println(net);
+	}
+	
+	public void Node() {
+		Node a = new Node("a", "1", 0, 0);
 	}
 
 }

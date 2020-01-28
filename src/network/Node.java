@@ -1,9 +1,10 @@
 package network;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import network.message.Message;
-import network.protocol.SendProtocol;
+import network.protocol.message.SendProtocol;
 
 public class Node {
 	
@@ -61,11 +62,11 @@ public class Node {
 	}
 	
 	public boolean send(Message m) {
-		String target = protocolSend.decide(contacts.keySet(), m);
+		Address target = protocolSend.decide(contacts.keySet(), m);
 		double time = m.getSize() * getProcessing();
 		//TODO: insert delay here, or have some means of making an event take time
 		int failure = 0;
-		while(!contacts.get(target).send(m, getAddressString()) && failure < FAIL_CAP) {
+		while(!contacts.get(target.toString()).send(m, getAddress()) && failure < FAIL_CAP) {
 			failure++;
 		}
 		return failure < FAIL_CAP;
@@ -79,7 +80,15 @@ public class Node {
 		return Math.sqrt(Math.pow(getX() - other.getX(), 2) + Math.pow(getY() - other.getY(), 2));
 	}
 	
+	public boolean endpoint() {
+		return false;
+	}
+	
 //---  Setter Methods   -----------------------------------------------------------------------
+
+	public void setCommunicationProtocol(SendProtocol in) {
+		protocolSend = in;
+	}
 	
 	public void setX(int inX) {
 		x = inX;
@@ -145,6 +154,10 @@ public class Node {
 
 	public SendProtocol getSendProtocol() {
 		return protocolSend;
+	}
+	
+	public Collection<Route> getContacts(){
+		return contacts.values();
 	}
 	
 //---  Mechanics   ----------------------------------------------------------------------------

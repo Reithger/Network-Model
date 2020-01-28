@@ -2,8 +2,6 @@ package network;
 
 import java.util.ArrayList;
 
-import network.device.Device;
-
 public class Network {
 	
 //---  Instance Variables   -------------------------------------------------------------------

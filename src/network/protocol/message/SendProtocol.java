@@ -1,12 +1,16 @@
-package network.protocol;
+package network.protocol.message;
 
 import java.util.Collection;
+
+import network.Address;
 import network.message.Message;
 
 public interface SendProtocol {
 	
 //---  Operations   ---------------------------------------------------------------------------
 
-	public abstract String decide(Collection<String> targets, Message m);
+	public abstract Address decide(Collection<String> targets, Message m);
+	
+	public abstract int memoryUsage();
 	
 }

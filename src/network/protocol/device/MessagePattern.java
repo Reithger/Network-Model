@@ -1,4 +1,4 @@
-package network.device;
+package network.protocol.device;
 
 public interface MessagePattern {
 
