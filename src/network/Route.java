@@ -1,5 +1,7 @@
 package network;
 
+import java.util.ArrayList;
+
 import network.message.Message;
 
 public class Route {
@@ -10,11 +12,13 @@ public class Route {
 	private Node endTwo;
 	private double speed;
 	private double distance;
+	private ArrayList<Message> messages;
 	
 //---  Constructors   -------------------------------------------------------------------------
 	
 	public Route(double spd) {
 		speed = spd;
+		messages = new ArrayList<Message>();
 	}
 
 //---  Operations   ---------------------------------------------------------------------------
@@ -25,12 +29,39 @@ public class Route {
 		distance = a.distance(b);
 	}
 	
-	public boolean send(Message m, Address address) {
-		return(pick(address.toString(), false).receive(m, time()));
+	public void operate() {
+		for(int i = 0; i < messages.size(); i++) {
+			Message m = messages.get(i);
+			if(System.currentTimeMillis() - m.getTimeStamp() >= time() * m.getSize()) {
+				System.out.println(m.getDestination());
+				System.out.println(endOne.getAddress());
+				System.out.println(endTwo.getAddress());
+				pick(m.getDestination(), true).receive(m);
+				messages.remove(m);
+				i--;
+			}
+		}
+	}
+	
+	public void send(Message m) {
+		m.setTimeStamp(System.currentTimeMillis());
+		messages.add(m);
 	}
 	
 	public double time() {
 		return speed * distance;
+	}
+	
+	private Node pick(Address address, boolean same) {
+		if(address.equals(endOne.getAddress())) {
+			return same ? endOne : endTwo;
+		}
+		else if(address.equals(endTwo.getAddress())) {
+			return same ? endTwo : endOne;
+		}
+		else {
+			return null;
+		}
 	}
 	
 	private Node pick(String address, boolean same) {

@@ -39,6 +39,16 @@ public class Address {
 		return new Address(sb.toString());
 	}
 	
+	public Address tear() {
+		String[] ad = getAddress().split("\\.");
+		String reb = "";
+		for(int i = 0; i < ad.length - 2; i++) {
+			reb += ad[i] + ".";
+		}
+		reb += ad[ad.length - 2];
+		return new Address(reb);
+	}
+	
 //---  Getter Methods   -----------------------------------------------------------------------
 	
 	public String getAddress() {
@@ -57,7 +67,15 @@ public class Address {
 		return null;
 	}
 	
+	public int getLength() {
+		return points.size();
+	}
+	
 //---  Mechanics   ----------------------------------------------------------------------------
+	
+	public boolean equals(Address a) {
+		return getAddress().equals(a.getAddress());
+	}
 	
 	public String toString() {
 		return getAddress();

@@ -7,12 +7,23 @@ import network.message.Message;
 
 public class TopToBottom implements SendProtocol{
 
+	public TopToBottom() {
+		
+	}
+	
 //---  Operations   ---------------------------------------------------------------------------
 	
 	@Override
 	public Address decide(Collection<String> targets, Message m) {
 		Address target = m.getDestination();
-		return null;
+		Address out = new Address();
+		for(String s : targets) {
+			Address test = target.prefixMatch(new Address(s));
+			if(test.getLength() > out.getLength()) {
+				out = test;
+			}
+		}
+		return out;
 	}
 
 	@Override

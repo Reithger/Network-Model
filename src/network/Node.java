@@ -42,34 +42,48 @@ public class Node {
 	
 //---  Operations   ---------------------------------------------------------------------------
 
-	public void connect(Node other, double speed) {
+	public void operate() {
+		if(queue.size() > 0) {
+			if(System.currentTimeMillis() -  queue.peek().getTimeStamp() >= queue.peek().getSize() * getProcessing()) {
+				Message m = queue.poll();
+				send(m);
+				memoryUsed -= m.getSize();
+			}
+		}
+	}
+	
+	public Route connect(Node other, double speed) {
 		Route rt = new Route(speed);
 		rt.assign(this, other);
 		addRoute(rt);
 		other.addRoute(rt);
+		return rt;
 	}
 	
-	public boolean receive(Message m, double time) {
-		//TODO: insert delay here, or have some means of making an event take time
-		if(m.getSize() + getMemoryUsed() > getMemoryMax()) {
-			return false;
-		}
-		else {
+	public void receive(Message m) {
+		System.out.println(name + " @ " + getAddress() + " received:\n" + m);
+		if(m.getSize() + getMemoryUsed() <= getMemoryMax()) {
 			memoryUsed += m.getSize();
-			queue.add(m);
-			return true;
+			while(m.getDestination() != null && m.getDestination().equals(address)) {
+				m.removeTopDestination();
+			}
+			m.setTimeStamp(System.currentTimeMillis());
+			if(m.getDestination() != null) {
+				queue.add(m);	
+			}
+			else {
+				
+			}
 		}
 	}
 	
-	public boolean send(Message m) {
+	public void send(Message m) {
 		Address target = protocolSend.decide(contacts.keySet(), m);
-		double time = m.getSize() * getProcessing();
-		//TODO: insert delay here, or have some means of making an event take time
-		int failure = 0;
-		while(!contacts.get(target.toString()).send(m, getAddress()) && failure < FAIL_CAP) {
-			failure++;
+		if(!m.getDestination().equals(target)) {
+			m.addDestination(target);
 		}
-		return failure < FAIL_CAP;
+		contacts.get(target.getAddress()).send(m);
+		System.out.println(getName() + " @ " + getAddress() + " sending:\n" + m + " to " + target);
 	}
 	
 	public void addRoute(Route rt) {
