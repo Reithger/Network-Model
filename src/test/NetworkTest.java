@@ -6,6 +6,7 @@ import java.util.Random;
 
 import org.junit.jupiter.api.Test;
 
+import display.Map;
 import network.Address;
 import network.Network;
 import network.Node;
@@ -50,6 +51,10 @@ class NetworkTest {
 		System.out.println(m);
 		nodeB.receive(m);
 		
+		Map map = new Map();
+		map.setNetwork(net);
+		map.updateMap();
+		
 		net.start();
 		
 		long start = System.currentTimeMillis();
@@ -78,6 +83,10 @@ class NetworkTest {
 		start = System.currentTimeMillis();
 		count = 0;
 		net2.start();
+		
+		map.setNetwork(net2);
+		map.updateMap();
+		
 		net2.sendMessageNode("C", "1.1.1", "h");
 		net2.sendMessageNode("D", "1.2", "Testing");
 		

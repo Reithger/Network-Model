@@ -97,6 +97,14 @@ public class Route {
 	public String getName() {
 		return name;
 	}
+	
+	public Node getFirstNode() {
+		return endOne;
+	}
+	
+	public Node getSecondNode() {
+		return endTwo;
+	}
 
 //---  Mechanics   ----------------------------------------------------------------------------
 	

@@ -14,8 +14,8 @@ public class Node {
 
 //---  Instance Variables   -------------------------------------------------------------------
 	
-	private int x;
-	private int y;
+	private double x;
+	private double y;
 	
 	private Address address;
 	private String name;
@@ -28,7 +28,7 @@ public class Node {
 	
 //---  Constructors   -------------------------------------------------------------------------
 	
-	public Node(String inName, String inaddress, int inX, int inY) {
+	public Node(String inName, String inaddress, double inX, double inY) {
 		x = inX;
 		y = inY;
 		address = new Address(inaddress);
@@ -110,11 +110,11 @@ public class Node {
 		protocolSend = in;
 	}
 	
-	public void setX(int inX) {
+	public void setX(double inX) {
 		x = inX;
 	}
 	
-	public void setY(int inY) {
+	public void setY(double inY) {
 		y = inY;
 	}
 	
@@ -140,11 +140,11 @@ public class Node {
 	
 //---  Getter Methods   -----------------------------------------------------------------------
 	
-	public int getX() {
+	public double getX() {
 		return x;
 	}
 	
-	public int getY() {
+	public double getY() {
 		return y;
 	}
 	

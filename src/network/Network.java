@@ -1,6 +1,7 @@
 package network;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -41,7 +42,7 @@ public class Network {
 			public void run() {
 				runNetwork();
 			}
-		}, 0, 10);
+		}, 0, 1000 / refreshRate);
 		running = true;
 	}
 	
@@ -73,7 +74,7 @@ public class Network {
 		nodes.put(add.getName(), add);
 	}
 
-	public void addNode(String name, String address, int x, int y, SendProtocol sP) {
+	public void addNode(String name, String address, double x, double y, SendProtocol sP) {
 		Node n = new Node(name, address, x, y);
 		n.setCommunicationProtocol(sP);
 		addNode(n);
@@ -83,7 +84,7 @@ public class Network {
 		devices.put(add.getName(), add);
 	}
 
-	public void addDevice(String name, String address, int x, int y, MessagePattern mP) {
+	public void addDevice(String name, String address, double x, double y, MessagePattern mP) {
 		Device d = new Device(name, address, x , y, mP);
 		addDevice(d);
 	}
@@ -127,6 +128,18 @@ public class Network {
 
 	public boolean getRunningStatus() {
 		return running;
+	}
+	
+	public Collection<Node> getNodes(){
+		return nodes.values();
+	}
+	
+	public Collection<Route> getRoutes(){
+		return routes.values();
+	}
+	
+	public Collection<Device> getDevices(){
+		return devices.values();
 	}
 	
 //---  Mechanics   ----------------------------------------------------------------------------

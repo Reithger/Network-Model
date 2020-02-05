@@ -11,7 +11,7 @@ public class Device extends Node{
 	
 //---  Constructors   -------------------------------------------------------------------------
 	
-	public Device(String inName, String inAddress, int inX, int inY, MessagePattern inMP) {
+	public Device(String inName, String inAddress, double inX, double inY, MessagePattern inMP) {
 		super(inName, inAddress, inX, inY);
 		mp = inMP;
 	}
