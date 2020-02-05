@@ -2,6 +2,8 @@ package test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.Random;
+
 import org.junit.jupiter.api.Test;
 
 import network.Address;
@@ -52,15 +54,44 @@ class NetworkTest {
 		
 		long start = System.currentTimeMillis();
 		int count = 0;
+		while(System.currentTimeMillis() - start < 1000) {
+			count++;
+			if(count % 10000000 == 0) {
+				//nodeB.receive(m);
+				//nodeA.receive(m3);
+				//nodeC.receive(m2);
+			}
+		}
+		net.stop();
+		
+		System.out.println("\n break \n");
+		
+		Network net2 = new Network();
+		net2.addNode("A", "1", 0, 0, ttB);
+		net2.addNode("B", "1.1", 1, 0, ttB);
+		net2.addNode("C", "1.2", 0, 1, ttB);
+		net2.addNode("D", "1.1.1", 1, 1, ttB);
+		net2.addRoute("A", "B", 1);
+		net2.addRoute("A", "C", 1);
+		net2.addRoute("B", "D", 1);
+		
+		start = System.currentTimeMillis();
+		count = 0;
+		net2.start();
+		net2.sendMessageNode("C", "1.1.1", "h");
+		net2.sendMessageNode("D", "1.2", "Testing");
+		
+		String[] star = new String[] {"A", "B", "C", "D"};
+		String[] dest = new String[] {"1", "1.1", "1.2", "1.1.1"};
+		Random rand = new Random();
+		
 		while(System.currentTimeMillis() - start < 10000) {
 			count++;
 			if(count % 10000000 == 0) {
-				nodeB.receive(m);
-				nodeA.receive(m3);
-				nodeC.receive(m2);
+				net2.sendMessageNode(star[rand.nextInt(4)], dest[rand.nextInt(4)], "Message");
 			}
 		}
-		
+		net2.stop();
 	}
 	
 	public void Node() {

@@ -14,14 +14,17 @@ public class TopToBottom implements SendProtocol{
 //---  Operations   ---------------------------------------------------------------------------
 	
 	@Override
-	public Address decide(Collection<String> targets, Message m) {
+	public Address decide(Collection<String> targets, Message m, Address defaultGate) {
 		Address target = m.getDestination();
 		Address out = new Address();
 		for(String s : targets) {
 			Address test = target.prefixMatch(new Address(s));
-			if(test.getLength() > out.getLength()) {
+			if(test.getLength() > out.getLength() && targets.contains(test.getAddress())) {
 				out = test;
 			}
+		}
+		if(out.getLength() == 0) {
+			return defaultGate;
 		}
 		return out;
 	}

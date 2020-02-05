@@ -10,6 +10,7 @@ public class Route {
 	
 	private Node endOne;
 	private Node endTwo;
+	private String name;
 	private double speed;
 	private double distance;
 	private ArrayList<Message> messages;
@@ -19,6 +20,7 @@ public class Route {
 	public Route(double spd) {
 		speed = spd;
 		messages = new ArrayList<Message>();
+		name = "";
 	}
 
 //---  Operations   ---------------------------------------------------------------------------
@@ -27,15 +29,13 @@ public class Route {
 		endOne = a;
 		endTwo = b;
 		distance = a.distance(b);
+		name = a.getName() + " <-> " + b.getName();
 	}
 	
 	public void operate() {
 		for(int i = 0; i < messages.size(); i++) {
 			Message m = messages.get(i);
 			if(System.currentTimeMillis() - m.getTimeStamp() >= time() * m.getSize()) {
-				System.out.println(m.getDestination());
-				System.out.println(endOne.getAddress());
-				System.out.println(endTwo.getAddress());
 				pick(m.getDestination(), true).receive(m);
 				messages.remove(m);
 				i--;
@@ -93,11 +93,16 @@ public class Route {
 	public double getSpeed() {
 		return speed;
 	}
+	
+	public String getName() {
+		return name;
+	}
 
 //---  Mechanics   ----------------------------------------------------------------------------
 	
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
+		sb.append("Name: " + getName());
 		sb.append("Endpoint one - Name: \"" + endOne.getName() + "\", Address: \"" + endOne.getAddressString() + "\"\n");
 		sb.append("Endpoint two - Name: \"" + endTwo.getName() + "\", Address: \"" + endTwo.getAddressString() + "\"\n");
 		sb.append("Length: " + getDistanceRounded() + ", Speed: " + getSpeed() + "\n");

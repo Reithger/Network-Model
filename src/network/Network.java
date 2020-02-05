@@ -1,8 +1,13 @@
 package network;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import network.message.Message;
+import network.protocol.device.MessagePattern;
+import network.protocol.message.SendProtocol;
 
 public class Network {
 	
@@ -12,18 +17,18 @@ public class Network {
 	
 //---  Instance Variables   -------------------------------------------------------------------
 
-	private ArrayList<Node> nodes;
-	private ArrayList<Device> devices;
-	private ArrayList<Route> routes;
+	private HashMap<String, Node> nodes;
+	private HashMap<String, Device> devices;
+	private HashMap<String, Route> routes;
 	private Timer timer;
 	private boolean running;
 	
 //---  Constructors   -------------------------------------------------------------------------
 	
 	public Network() {
-		nodes = new ArrayList<Node>();
-		devices = new ArrayList<Device>();
-		routes = new ArrayList<Route>();
+		nodes = new HashMap<String, Node>();
+		devices = new HashMap<String, Device>();
+		routes = new HashMap<String, Route>();
 		timer = new Timer();
 		running = false;
 	}
@@ -47,42 +52,74 @@ public class Network {
 	}
 	
 	private void runNetwork() {
-		for(Node n : nodes) {
+		for(Node n : nodes.values()) {
 			n.operate();
 		}
-		for(Route r : routes) {
+		for(Route r : routes.values()) {
 			r.operate();
 		}
-		for(Device d : devices) {
+		for(Device d : devices.values()) {
 			d.operate();
 		}
+	}
+	
+	public void sendMessageNode(String source, String target, String message) {
+		nodes.get(source).receive(new Message(target, message));
 	}
 	
 //---  Adder Methods   ------------------------------------------------------------------------
 	
 	public void addNode(Node add) {
-		nodes.add(add);
+		nodes.put(add.getName(), add);
 	}
 
+	public void addNode(String name, String address, int x, int y, SendProtocol sP) {
+		Node n = new Node(name, address, x, y);
+		n.setCommunicationProtocol(sP);
+		addNode(n);
+	}
+	
 	public void addDevice(Device add) {
-		devices.add(add);
+		devices.put(add.getName(), add);
 	}
 
+	public void addDevice(String name, String address, int x, int y, MessagePattern mP) {
+		Device d = new Device(name, address, x , y, mP);
+		addDevice(d);
+	}
+	
 	public void addRoute(Route add) {
-		routes.add(add);
+		routes.put(add.getName(), add);
+	}
+	
+	public void addRoute(String nodeA, String nodeB, int speed) {
+		Route r = nodes.get(nodeA).connect(nodes.get(nodeB), speed);
+		addRoute(r);
 	}
 
 //---  Remover Methods   -----------------------------------------------------------------------
 	
 	public void removeNode(Node remove) {
+		nodes.remove(remove.getName());
+	}
+	
+	public void removeNode(String remove) {
 		nodes.remove(remove);
 	}
 	
 	public void removeDevice(Device remove) {
+		devices.remove(remove.getName());
+	}
+	
+	public void removeDevice(String remove) {
 		devices.remove(remove);
 	}
 	
 	public void removeRoute(Route remove) {
+		routes.remove(remove.getName());
+	}
+	
+	public void removeRoute(String remove) {
 		routes.remove(remove);
 	}
 	
@@ -97,15 +134,15 @@ public class Network {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("---Nodes---\n");
-		for(Node n : nodes) {
+		for(Node n : nodes.values()) {
 			sb.append(" > " + n.toString());
 		}
 		sb.append("\n---Devices---\n");
-		for(Device d : devices) {
+		for(Device d : devices.values()) {
 			sb.append(" > " + d.toString());
 		}
 		sb.append("\n---Routes---\n");
-		for(Route r : routes) {
+		for(Route r : routes.values()) {
 			sb.append(" > " + r.toString());
 		}
 		return sb.toString();

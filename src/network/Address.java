@@ -41,6 +41,9 @@ public class Address {
 	
 	public Address tear() {
 		String[] ad = getAddress().split("\\.");
+		if(ad.length == 1) {
+			return new Address();
+		}
 		String reb = "";
 		for(int i = 0; i < ad.length - 2; i++) {
 			reb += ad[i] + ".";

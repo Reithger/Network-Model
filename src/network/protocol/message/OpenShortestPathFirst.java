@@ -35,7 +35,7 @@ public class OpenShortestPathFirst implements SendProtocol{
 //---  Operations   ---------------------------------------------------------------------------
 	
 	@Override
-	public Address decide(Collection<String> targets, Message m) {
+	public Address decide(Collection<String> targets, Message m, Address defaultGateway) {
 		Address target = m.getDestination();
 		return null;
 	}

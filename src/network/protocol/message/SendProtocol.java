@@ -9,7 +9,7 @@ public interface SendProtocol {
 	
 //---  Operations   ---------------------------------------------------------------------------
 
-	public abstract Address decide(Collection<String> targets, Message m);
+	public abstract Address decide(Collection<String> targets, Message m, Address defaultGateway);
 	
 	public abstract int memoryUsage();
 	

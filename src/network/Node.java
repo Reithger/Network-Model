@@ -78,12 +78,18 @@ public class Node {
 	}
 	
 	public void send(Message m) {
-		Address target = protocolSend.decide(contacts.keySet(), m);
-		if(!m.getDestination().equals(target)) {
-			m.addDestination(target);
+		try {
+			Address target = protocolSend.decide(contacts.keySet(), m, getAddress().tear());
+			if(!m.getDestination().equals(target)) {
+				m.addDestination(target);
+			}
+			contacts.get(target.getAddress()).send(m);
+			System.out.println(getName() + " @ " + getAddress() + " sending:\n" + m + " to " + target + "\n");
 		}
-		contacts.get(target.getAddress()).send(m);
-		System.out.println(getName() + " @ " + getAddress() + " sending:\n" + m + " to " + target);
+		catch(Exception e) {
+			System.out.println("Error Sending:\n" + m + "\nfrom " + getName() + " @ " + getAddress() + "\n");
+			e.printStackTrace();
+		}
 	}
 	
 	public void addRoute(Route rt) {
