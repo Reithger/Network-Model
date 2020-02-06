@@ -15,10 +15,14 @@ public class Map {
 	private final static int DEFAULT_WIDTH = 800;
 	private final static int DEFAULT_HEIGHT = 600;
 	private final static int DEFAULT_ZOOM = 50;
+	private final static int DEFAULT_NODE_SIZE = 20;
+	private final static int DEFAULT_ROUTE_SIZE = 6;
+	private final static int REFRESH_RATE = 1000 / 30;
+	
 	private final static Color GRID_COLOR = new Color(225, 225, 225);
 	private final static Color NODE_COLOR = Color.blue;
 	private final static Color ROUTE_COLOR = Color.red;
-	private final static int REFRESH_RATE = 1000 / 30;
+	private final static Color BUTTON_COLOR = new Color(133, 133, 133);
 	
 	private final static int CODE_MOVE_UP = 1;
 	private final static int CODE_MOVE_LEFT = 2;
@@ -27,7 +31,7 @@ public class Map {
 	private final static int CODE_ZOOM_IN = 5;
 	private final static int CODE_ZOOM_OUT = 6;
 	private final static int CODE_NODE_RANGE = 500;
-
+	
 	private Network net;
 	private WindowFrame frame;
 	private ElementPanel panel;
@@ -36,8 +40,11 @@ public class Map {
 	private int cY;
 	private int width;
 	private int height;
+	private int nodeSize;
+	private int routeSize;
 	private double zoom;
 	private Timer timer;
+	private boolean race;
 	
 	public Map() {
 		width = DEFAULT_WIDTH;
@@ -45,6 +52,8 @@ public class Map {
 		cX = 0;
 		cY = 0;
 		zoom = DEFAULT_ZOOM;
+		nodeSize = DEFAULT_NODE_SIZE;
+		routeSize = DEFAULT_ROUTE_SIZE;
 		frame = new WindowFrame(width, height);
 		panel = new ElementPanel(0, 0, width, height) {
 			public void keyBehaviour(char in) {
@@ -72,20 +81,29 @@ public class Map {
 	}
 	
 	public void updateMap() {
-		if(net == null) {
+		if(net == null || race) {
 			return;
 		}
-		int size = (int)(zoom * .3);
+		race = true;
 		for(Node n : net.getNodes()) {
-			panel.addRectangle(n.getName() + "_rect", 2, getXPosition(n.getX()), getYPosition(n.getY()), size, size, true, NODE_COLOR);
+			drawNode(n);
 		}
 		for(Route r : net.getRoutes()) {
-			Node a = r.getFirstNode();
-			Node b = r.getSecondNode();
-			panel.addLine(r.getName() + "_line", 1, getXPosition(a.getX()), getYPosition(a.getY()), getXPosition(b.getX()), getYPosition(b.getY()), (int)(zoom * .1), ROUTE_COLOR);
+			drawRoute(r);
 		}
 		grid();
 		overlay();
+		race = false;
+	}
+	
+	public void drawNode(Node n) {
+		panel.addRectangle(n.getName() + "_rect", 2, getXPosition(n.getX()), getYPosition(n.getY()), nodeSize, nodeSize, true, NODE_COLOR);
+	}
+	
+	public void drawRoute(Route r) {
+		Node a = r.getFirstNode();
+		Node b = r.getSecondNode();
+		panel.addLine(r.getName() + "_line", 1, getXPosition(a.getX()), getYPosition(a.getY()), getXPosition(b.getX()), getYPosition(b.getY()), routeSize, ROUTE_COLOR);
 	}
 	
 	public void grid() {
@@ -99,7 +117,16 @@ public class Map {
 	}
 	
 	public void overlay() {
+		int ovX = width * 9 / 10;
+		int ovY = height / 12;
+		int size = width / 30;
+		panel.addButton("butt_move_up", 5, ovX, ovY - size, size, size, BUTTON_COLOR, CODE_MOVE_UP, true);
+		panel.addButton("butt_move_down", 5, ovX, ovY + size, size, size, BUTTON_COLOR, CODE_MOVE_DOWN, true);
+		panel.addButton("butt_move_right", 5, ovX + size, ovY, size, size, BUTTON_COLOR, CODE_MOVE_RIGHT, true);
+		panel.addButton("butt_move_left", 5, ovX - size, ovY, size, size, BUTTON_COLOR, CODE_MOVE_LEFT, true);
 		
+		panel.addButton("butt_zoom_in", 5, ovX - size, ovY + 5 * size / 2, size, size, BUTTON_COLOR, CODE_ZOOM_IN, true);
+		panel.addButton("butt_zoom_out", 5, ovX + size, ovY + 5 * size / 2, size, size, BUTTON_COLOR, CODE_ZOOM_OUT, true);
 	}
 	
 	public int getXPosition(double inX) {
@@ -107,30 +134,30 @@ public class Map {
 	}
 	
 	public int getYPosition(double inY) {
-		return (int)(height / 2 + (inY - cY) / (height / zoom / 2) * (height / 2));
+		return (int)(height / 2 - (inY - cY) / (height / zoom / 2) * (height / 2));
 	}
 	
 	public void handleKeyboardInput(char in) {
 		switch(in) {
 		case 'w' : 
-			cY -= height / zoom / 3; 
+			cY += getMoveY();
 			break;
 		case 'a' : 
-			cX -= width / zoom / 3; 
+			cX -= getMoveX(); 
 			break;
 		case 's' : 
-			cY += height / zoom / 3;
+			cY -= getMoveY();
 			break;
 		case 'd' : 
-			cX += width / zoom / 3; 
+			cX += getMoveX(); 
 			break;
 		case 'z' : 
-			zoom += 5; 
+			zoom += getZoom(); 
 			panel.removeElementPrefixed("grid");
 			break;
 		case 'x' : 
-			if(zoom - 5 > 0)
-				zoom -= 5;
+			if(zoom - getZoom() > 0)
+				zoom -= getZoom();
 			panel.removeElementPrefixed("grid");
 			break;
 		case 'p' : 
@@ -143,28 +170,40 @@ public class Map {
 	public void handleClickInput(int in) {
 		switch(in) {
 			case CODE_MOVE_UP:
-				cY += height / zoom * 3;
+				cY += getMoveY();
 				break;
 			case CODE_MOVE_DOWN:
-				cY -= height / zoom * 3;
+				cY -= getMoveY();
 				break;
 			case CODE_MOVE_RIGHT:
-				cX += width / zoom * 3;
+				cX += getMoveX();
 				break;
 			case CODE_MOVE_LEFT:
-				cX -= width / zoom * 3;
+				cX -= getMoveX();
 				break;
 			case CODE_ZOOM_IN:
-				zoom += 5; 
+				zoom += getZoom(); 
 				panel.removeElementPrefixed("grid");
 				break;
 			case CODE_ZOOM_OUT:
-				if(zoom - 5 > 0)
-					zoom -= 5;
+				if(zoom - getZoom() > 0)
+					zoom -= getZoom();
 				panel.removeElementPrefixed("grid");
 				break;
 			default: break;
 		}
+	}
+
+	public int getMoveX() {
+		return (int)(width / zoom / 3);
+	}
+	
+	public int getMoveY() {
+		return (int)(height / zoom / 3);
+	}
+	
+	public int getZoom() {
+		return 5;
 	}
 	
 }
