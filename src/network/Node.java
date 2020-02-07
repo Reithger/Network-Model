@@ -44,7 +44,7 @@ public class Node {
 
 	public void operate() {
 		if(queue.size() > 0) {
-			if(System.currentTimeMillis() -  queue.peek().getTimeStamp() >= queue.peek().getSize() * getProcessing()) {
+			if(second(System.currentTimeMillis() -  queue.peek().getTimeStamp()) >= queue.peek().getSize() * getProcessing()) {
 				Message m = queue.poll();
 				send(m);
 				memoryUsed -= m.getSize();
@@ -52,8 +52,8 @@ public class Node {
 		}
 	}
 	
-	public Route connect(Node other, double speed) {
-		Route rt = new Route(speed);
+	public Route connect(Node other, double upSpeed, double strmSpeed) {
+		Route rt = new Route(upSpeed, strmSpeed);
 		rt.assign(this, other);
 		addRoute(rt);
 		other.addRoute(rt);
@@ -188,6 +188,10 @@ public class Node {
 		sb.append("Processing: " + getProcessing() + ", Memory Max: " + getMemoryMax() + "\n");
 		sb.append("X: " + getX() + ", Y: " + getY() + "\n");
 		return sb.toString();
+	}
+	
+	public double second(long in) {
+		return in / 1000.0;
 	}
 	
 }

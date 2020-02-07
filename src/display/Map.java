@@ -4,9 +4,11 @@ import java.awt.Color;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import network.Device;
 import network.Network;
 import network.Node;
 import network.Route;
+import network.message.Message;
 import visual.frame.WindowFrame;
 import visual.panel.ElementPanel;
 
@@ -23,6 +25,8 @@ public class Map {
 	private final static Color NODE_COLOR = Color.blue;
 	private final static Color ROUTE_COLOR = Color.red;
 	private final static Color BUTTON_COLOR = new Color(133, 133, 133);
+	private final static Color MESSAGE_COLOR = Color.black;
+	private final static Color DEVICE_COLOR = Color.yellow;
 	
 	private final static int CODE_MOVE_UP = 1;
 	private final static int CODE_MOVE_LEFT = 2;
@@ -91,6 +95,9 @@ public class Map {
 		for(Route r : net.getRoutes()) {
 			drawRoute(r);
 		}
+		for(Device d : net.getDevices()) {
+			drawDevice(d);
+		}
 		grid();
 		overlay();
 		race = false;
@@ -104,6 +111,19 @@ public class Map {
 		Node a = r.getFirstNode();
 		Node b = r.getSecondNode();
 		panel.addLine(r.getName() + "_line", 1, getXPosition(a.getX()), getYPosition(a.getY()), getXPosition(b.getX()), getYPosition(b.getY()), routeSize, ROUTE_COLOR);
+		for(Message m : r.getMessages()) {
+			double prog = r.progress(m);
+			double rise = b.getY() - a.getY();
+			double run = b.getX() - a.getX();
+			double angle = Math.atan(rise / run);
+			double x = prog * a.distance(b) * Math.cos(angle);
+			double y = prog * a.distance(b) * Math.sin(angle);
+			panel.addRectangle(r.getName() + "_message_" + m.getTimeStamp(), 2, getXPosition(x), getYPosition(y), nodeSize / 4, nodeSize / 4, true, MESSAGE_COLOR);
+		}
+	}
+
+	public void drawDevice(Device d) {
+		panel.addRectangle(d.getName() + "_rect", 2, getXPosition(d.getX()), getYPosition(d.getY()), nodeSize / 2, nodeSize / 2, true, DEVICE_COLOR);
 	}
 	
 	public void grid() {

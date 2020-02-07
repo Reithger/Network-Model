@@ -55,6 +55,9 @@ public class Address {
 //---  Getter Methods   -----------------------------------------------------------------------
 	
 	public String getAddress() {
+		if(points.size() == 0) {
+			return "";
+		}
 		StringBuilder sb = new StringBuilder();
 		for(int i = 0; i < points.size() - 1; i++) {
 			sb.append(points.get(i) + ".");
@@ -77,6 +80,7 @@ public class Address {
 //---  Mechanics   ----------------------------------------------------------------------------
 	
 	public boolean equals(Address a) {
+		System.out.println(a.getAddress() + " " + getAddress());
 		return getAddress().equals(a.getAddress());
 	}
 	

@@ -26,8 +26,8 @@ class NetworkTest {
 		nodeB.setCommunicationProtocol(ttB);
 		nodeC.setCommunicationProtocol(ttB);
 		
-		Route rt = nodeA.connect(nodeB, 1);
-		Route rt2 = nodeA.connect(nodeC, 1);
+		Route rt = nodeA.connect(nodeB, 1, 1);
+		Route rt2 = nodeA.connect(nodeC, 1, 1);
 
 		Network net = new Network();
 		System.out.println(nodeA);
@@ -76,9 +76,9 @@ class NetworkTest {
 		net2.addNode("B", "1.1", 1, 0, ttB);
 		net2.addNode("C", "1.2", 0, 1, ttB);
 		net2.addNode("D", "1.1.1", 1, 1, ttB);
-		net2.addRoute("A", "B", 1);
-		net2.addRoute("A", "C", 1);
-		net2.addRoute("B", "D", 1);
+		net2.addRoute("A", "B", 1, 1);
+		net2.addRoute("A", "C", 1, 1);
+		net2.addRoute("B", "D", 1, 1);
 		
 		start = System.currentTimeMillis();
 		count = 0;
@@ -97,7 +97,7 @@ class NetworkTest {
 		while(System.currentTimeMillis() - start < 10000) {
 			count++;
 			if(count % 10000000 == 0) {
-				net2.sendMessageNode(star[rand.nextInt(4)], dest[rand.nextInt(4)], "Message");
+				//net2.sendMessageNode(star[rand.nextInt(4)], dest[rand.nextInt(4)], "Message");
 			}
 		}
 		net2.stop();

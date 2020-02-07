@@ -1,6 +1,7 @@
 package network;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 import network.message.Message;
 
@@ -11,15 +12,17 @@ public class Route {
 	private Node endOne;
 	private Node endTwo;
 	private String name;
-	private double speed;
+	private double uploadSpeed;
 	private double distance;
-	private ArrayList<Message> messages;
+	private double streamSpeed;
+	private LinkedList<Message> messages;
 	
 //---  Constructors   -------------------------------------------------------------------------
 	
-	public Route(double spd) {
-		speed = spd;
-		messages = new ArrayList<Message>();
+	public Route(double upSpd, double strmSpd) {
+		uploadSpeed = upSpd;
+		streamSpeed = strmSpd;
+		messages = new LinkedList<Message>();
 		name = "";
 	}
 
@@ -35,7 +38,7 @@ public class Route {
 	public void operate() {
 		for(int i = 0; i < messages.size(); i++) {
 			Message m = messages.get(i);
-			if(System.currentTimeMillis() - m.getTimeStamp() >= time() * m.getSize()) {
+			if(second(System.currentTimeMillis() - m.getTimeStamp()) >= messageDelay(m)) {
 				pick(m.getDestination(), true).receive(m);
 				messages.remove(m);
 				i--;
@@ -47,9 +50,25 @@ public class Route {
 		m.setTimeStamp(System.currentTimeMillis());
 		messages.add(m);
 	}
+
+	public double second(long in) {
+		return in / 1000.0;
+	}
 	
-	public double time() {
-		return speed * distance;
+	public double messageDelay(Message m) {
+		return propogationDelay(m) + travelTime();
+	}
+	
+	public double propogationDelay(Message m) {
+		return getUploadSpeed() * m.getSize();
+	}
+	
+	public double travelTime() {
+		return getDistance() * getStreamSpeed(); 
+	}
+		
+	public double progress(Message m) {
+		return second(System.currentTimeMillis() - m.getTimeStamp()) / messageDelay(m);
 	}
 	
 	private Node pick(Address address, boolean same) {
@@ -90,8 +109,12 @@ public class Route {
 		return (double)((int)(distance * 100)) / 100.0;
 	}
 	
-	public double getSpeed() {
-		return speed;
+	public double getUploadSpeed() {
+		return uploadSpeed;
+	}
+	
+	public double getStreamSpeed() {
+		return streamSpeed;
 	}
 	
 	public String getName() {
@@ -106,14 +129,18 @@ public class Route {
 		return endTwo;
 	}
 
+	public LinkedList<Message> getMessages(){
+		return messages;
+	}
+	
 //---  Mechanics   ----------------------------------------------------------------------------
 	
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("Name: " + getName());
+		sb.append("Name: " + getName() + ", Upload Speed: " + getUploadSpeed() + "\n");
 		sb.append("Endpoint one - Name: \"" + endOne.getName() + "\", Address: \"" + endOne.getAddressString() + "\"\n");
 		sb.append("Endpoint two - Name: \"" + endTwo.getName() + "\", Address: \"" + endTwo.getAddressString() + "\"\n");
-		sb.append("Length: " + getDistanceRounded() + ", Speed: " + getSpeed() + "\n");
+		sb.append("Length: " + getDistanceRounded() + ", Stream Speed: " + getStreamSpeed() + "\n");
 		return sb.toString();
 	}
 	

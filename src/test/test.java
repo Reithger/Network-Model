@@ -14,16 +14,16 @@ public class test {
 		net2.addNode("C", "1.2", 0, 1, ttB);
 		net2.addNode("D", "1.1.1", 1, 1, ttB);
 		net2.addNode("E", "1.2.1", 3, 2, ttB);
-		net2.addRoute("A", "B", 1);
-		net2.addRoute("A", "C", 1);
-		net2.addRoute("B", "D", 1);
-		net2.addRoute("E", "B", 1);
+		net2.addRoute("A", "B", 1, 1);
+		net2.addRoute("A", "C", 1, 1);
+		net2.addRoute("B", "D", 1, 1);
+		net2.addRoute("E", "B", 1, 1);
 
 		net2.start();
 		Map map = new Map();
 		
 		map.setNetwork(net2);
-		map.updateMap();
+		net2.sendMessageNode("A", "1.2.1", "Hello");
 	}
 	
 }

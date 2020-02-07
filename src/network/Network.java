@@ -93,8 +93,8 @@ public class Network {
 		routes.put(add.getName(), add);
 	}
 	
-	public void addRoute(String nodeA, String nodeB, int speed) {
-		Route r = nodes.get(nodeA).connect(nodes.get(nodeB), speed);
+	public void addRoute(String nodeA, String nodeB, int upSpeed, int strmSpd) {
+		Route r = nodes.get(nodeA).connect(nodes.get(nodeB), upSpeed, strmSpd);
 		addRoute(r);
 	}
 
