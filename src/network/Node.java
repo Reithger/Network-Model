@@ -11,6 +11,7 @@ public class Node {
 //---  Constant Values   ----------------------------------------------------------------------
 	
 	private final static int FAIL_CAP = 50;
+	private final static int DEFAULT_PROCESSING = 6;
 
 //---  Instance Variables   -------------------------------------------------------------------
 	
@@ -33,7 +34,7 @@ public class Node {
 		y = inY;
 		address = new Address(inaddress);
 		name = inName;
-		processing = 1;
+		processing = DEFAULT_PROCESSING;
 		memoryMax = 100;
 		memoryUsed = 0;
 		queue = new LinkedList<Message>();
@@ -44,7 +45,7 @@ public class Node {
 
 	public void operate() {
 		if(queue.size() > 0) {
-			if(second(System.currentTimeMillis() -  queue.peek().getTimeStamp()) >= queue.peek().getSize() * getProcessing()) {
+			if(second(System.currentTimeMillis() -  queue.peek().getTimeStamp()) >= (double)queue.peek().getSize() / getProcessing()) {
 				Message m = queue.poll();
 				send(m);
 				memoryUsed -= m.getSize();

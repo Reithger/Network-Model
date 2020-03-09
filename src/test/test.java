@@ -1,5 +1,7 @@
 package test;
 
+import java.util.Random;
+
 import display.Map;
 import network.Network;
 import network.protocol.message.TopToBottom;
@@ -20,10 +22,22 @@ public class test {
 		net2.addRoute("E", "B", 1, 1);
 
 		net2.start();
-		Map map = new Map();
+		
+		String[] nodes = new String[] {"A", "B", "C", "D", "E"};
+		String[] targets = new String[] {"1", "1.1", "1.2", "1.1.1", "1.2.1"};
+		
+		Random rand = new Random();
+		
+		Map map = new Map() {
+			public void command() {
+				if(getNetwork() == null || rand.nextInt(50) != 4) {
+					return;
+				}
+				getNetwork().sendMessageNode(nodes[rand.nextInt(nodes.length)], targets[rand.nextInt(targets.length)], "Hello");
+			}
+		};
 		
 		map.setNetwork(net2);
-		net2.sendMessageNode("A", "1.2.1", "Hello");
 	}
 	
 }

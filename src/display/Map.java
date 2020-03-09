@@ -1,6 +1,8 @@
 package display;
 
 import java.awt.Color;
+import java.awt.Font;
+import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -28,13 +30,28 @@ public class Map {
 	private final static Color MESSAGE_COLOR = Color.black;
 	private final static Color DEVICE_COLOR = Color.yellow;
 	
+	private final static Font DISPLAY_FONT = new Font("Serif", Font.BOLD, 12);
+	
 	private final static int CODE_MOVE_UP = 1;
 	private final static int CODE_MOVE_LEFT = 2;
 	private final static int CODE_MOVE_DOWN = 3;
 	private final static int CODE_MOVE_RIGHT = 4;
 	private final static int CODE_ZOOM_IN = 5;
 	private final static int CODE_ZOOM_OUT = 6;
-	private final static int CODE_NODE_RANGE = 500;
+	private final static int CODE_START = 7;
+	private final static int CODE_PAUSE = 8;
+	private final static int CODE_RANGE_SIZE = 500;
+	private final static int CODE_NODE_RANGE = CODE_RANGE_SIZE * 1;
+	private final static int CODE_ROUTE_RANGE = CODE_RANGE_SIZE * 2;
+	private final static int CODE_MESSAGE_RANGE = CODE_RANGE_SIZE * 3;
+
+	private final static int INTERACTION_ENTITY_TYPE_COUNT = 3;
+	private final static int INTERACTION_ENTITY_TYPE_NODE = 0;
+	private final static int INTERACTION_ENTITY_TYPE_ROUTE = 1;
+	private final static int INTERACTION_ENTITY_TYPE_MESSAGE = 2;
+	private final static int NODE_STATE_DEFAULT = 0;
+	private final static int NODE_STATE_DISPLAY_NO = 0;
+	private final static int NODE_STATE_DISPLAY_YES = 1;
 	
 	private Network net;
 	private WindowFrame frame;
@@ -49,6 +66,9 @@ public class Map {
 	private double zoom;
 	private Timer timer;
 	private boolean race;
+	private HashMap<String, Integer> codeMap;
+	private HashMap<Integer, Integer> codeState;
+	private int[] interactCount;
 	
 	public Map() {
 		width = DEFAULT_WIDTH;
@@ -58,6 +78,9 @@ public class Map {
 		zoom = DEFAULT_ZOOM;
 		nodeSize = DEFAULT_NODE_SIZE;
 		routeSize = DEFAULT_ROUTE_SIZE;
+		codeMap = new HashMap<String, Integer>();
+		codeState = new HashMap<Integer, Integer>();
+		interactCount = new int[INTERACTION_ENTITY_TYPE_COUNT];
 		frame = new WindowFrame(width, height);
 		panel = new ElementPanel(0, 0, width, height) {
 			public void keyBehaviour(char in) {
@@ -75,9 +98,14 @@ public class Map {
 			@Override
 			public void run() {
 				updateMap();
+				command();
 			}
 			
 		}, 0, REFRESH_RATE);
+	}
+	
+	public void command() {
+		return;
 	}
 	
 	public void setNetwork(Network in) {
@@ -104,21 +132,56 @@ public class Map {
 	}
 	
 	public void drawNode(Node n) {
-		panel.addRectangle(n.getName() + "_rect", 2, getXPosition(n.getX()), getYPosition(n.getY()), nodeSize, nodeSize, true, NODE_COLOR);
+		int x = getXPosition(n.getX());
+		int y = getYPosition(n.getY());
+		panel.addRectangle(n.getName() + "_rect", 3, x, y, nodeSize, nodeSize, true, NODE_COLOR);
+		if(codeMap.get(n.getName()) == null) {
+			codeMap.put(n.getName(), CODE_NODE_RANGE + interactCount[INTERACTION_ENTITY_TYPE_NODE]);
+			interactCount[INTERACTION_ENTITY_TYPE_NODE]++;
+		}
+		int code = codeMap.get(n.getName());
+		if(codeState.get(code) == null) {
+			codeState.put(code, NODE_STATE_DEFAULT);
+		}
+		switch(codeState.get(code)) {
+			case NODE_STATE_DISPLAY_NO:
+				break;
+			case NODE_STATE_DISPLAY_YES:
+				panel.addRectangle("active_display_rect_" + n.getName(), 10, x, y, code, code, true, Color.WHITE, Color.BLACK);
+				panel.addText("active_display_text_" + n.getName(), 11, x, y, width / 4, height / 5, n.toString(), DISPLAY_FONT, true, true, true);
+				break;
+			default:
+		}
+		panel.addButton(n.getName() + "_interact", 5, x, y, nodeSize, nodeSize, codeMap.get(n.getName()), true);
 	}
 	
 	public void drawRoute(Route r) {
 		Node a = r.getFirstNode();
 		Node b = r.getSecondNode();
-		panel.addLine(r.getName() + "_line", 1, getXPosition(a.getX()), getYPosition(a.getY()), getXPosition(b.getX()), getYPosition(b.getY()), routeSize, ROUTE_COLOR);
+		panel.removeElementPrefixed("line_" + r.getName());
+		panel.addLine("line_" + r.getName(), 1, getXPosition(a.getX()), getYPosition(a.getY()), getXPosition(b.getX()), getYPosition(b.getY()), routeSize, ROUTE_COLOR);
 		for(Message m : r.getMessages()) {
+			double x1, x2, y1, y2;
+			if(m.getDestination().equals(a.getAddress())) {
+				x1 = b.getX();
+				x2 = a.getX();
+				y1 = b.getY();
+				y2 = a.getY();
+			}
+			else {
+				x2 = b.getX();
+				x1 = a.getX();
+				y2 = b.getY();
+				y1 = a.getY();
+			}
 			double prog = r.progress(m);
-			double rise = b.getY() - a.getY();
-			double run = b.getX() - a.getX();
+			double rise = y2 - y1;
+			double run = x2 - x1;
 			double angle = Math.atan(rise / run);
-			double x = prog * a.distance(b) * Math.cos(angle);
-			double y = prog * a.distance(b) * Math.sin(angle);
-			panel.addRectangle(r.getName() + "_message_" + m.getTimeStamp(), 2, getXPosition(x), getYPosition(y), nodeSize / 4, nodeSize / 4, true, MESSAGE_COLOR);
+			double x = x1 + prog * a.distance(b) * Math.cos(angle);
+			double y = y1 + prog * a.distance(b) * Math.sin(angle);
+
+			panel.addRectangle("message_" + r.getName() + "_" + m.getTimeStamp(), 2, getXPosition(x), getYPosition(y), nodeSize / 4, nodeSize / 4, true, MESSAGE_COLOR);
 		}
 	}
 
@@ -147,6 +210,9 @@ public class Map {
 		
 		panel.addButton("butt_zoom_in", 5, ovX - size, ovY + 5 * size / 2, size, size, BUTTON_COLOR, CODE_ZOOM_IN, true);
 		panel.addButton("butt_zoom_out", 5, ovX + size, ovY + 5 * size / 2, size, size, BUTTON_COLOR, CODE_ZOOM_OUT, true);
+		
+		panel.addButton("butt_pause", 5, ovX - size, ovY + 5 * size, size, size, BUTTON_COLOR, CODE_PAUSE, true);
+		panel.addButton("butt_start", 5, ovX + size, ovY + 5 * size, size, size, BUTTON_COLOR, CODE_START, true);
 	}
 	
 	public int getXPosition(double inX) {
@@ -188,29 +254,55 @@ public class Map {
 	}
 
 	public void handleClickInput(int in) {
-		switch(in) {
-			case CODE_MOVE_UP:
-				cY += getMoveY();
-				break;
-			case CODE_MOVE_DOWN:
-				cY -= getMoveY();
-				break;
-			case CODE_MOVE_RIGHT:
-				cX += getMoveX();
-				break;
-			case CODE_MOVE_LEFT:
-				cX -= getMoveX();
-				break;
-			case CODE_ZOOM_IN:
-				zoom += getZoom(); 
-				panel.removeElementPrefixed("grid");
-				break;
-			case CODE_ZOOM_OUT:
-				if(zoom - getZoom() > 0)
-					zoom -= getZoom();
-				panel.removeElementPrefixed("grid");
-				break;
-			default: break;
+		System.out.println(in);
+		if(in < CODE_RANGE_SIZE) {
+			switch(in) {
+				case CODE_MOVE_UP:
+					cY += getMoveY();
+					break;
+				case CODE_MOVE_DOWN:
+					cY -= getMoveY();
+					break;
+				case CODE_MOVE_RIGHT:
+					cX += getMoveX();
+					break;
+				case CODE_MOVE_LEFT:
+					cX -= getMoveX();
+					break;
+				case CODE_ZOOM_IN:
+					zoom += getZoom(); 
+					panel.removeElementPrefixed("grid");
+					break;
+				case CODE_ZOOM_OUT:
+					if(zoom - getZoom() > 0)
+						zoom -= getZoom();
+					panel.removeElementPrefixed("grid");
+					break;
+				case CODE_PAUSE:
+					net.stop();
+					break;
+				case CODE_START:
+					net.start();
+					break;
+				default: break;
+			}
+		}
+		else {
+			System.out.println(codeState.get(in));
+			switch((int)(in / CODE_RANGE_SIZE)) {
+				case 0:
+					if(codeState.get(in) == NODE_STATE_DISPLAY_NO) {
+						codeState.put(in, NODE_STATE_DISPLAY_YES);
+					}
+					else {
+						codeState.put(in, NODE_STATE_DISPLAY_NO);
+					}
+					break;
+				case 1:
+					break;
+				case 2:
+					break;
+			}
 		}
 	}
 
@@ -224,6 +316,10 @@ public class Map {
 	
 	public int getZoom() {
 		return 5;
+	}
+	
+	public Network getNetwork() {
+		return net;
 	}
 	
 }
