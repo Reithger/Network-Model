@@ -1,7 +1,7 @@
 package network.message;
 
 import java.util.LinkedList;
-
+import network.Network;
 import network.Address;
 
 public class Message {
@@ -10,8 +10,8 @@ public class Message {
 
 	private LinkedList<Address> target;
 	private String body;
-	private long born;
-	private long time;
+	private int born;
+	private int time;
 	
 //---  Constructors   -------------------------------------------------------------------------
 	
@@ -19,14 +19,14 @@ public class Message {
 		target = new LinkedList<Address>();
 		target.add(new Address(inTarget));
 		body = inBody;
-		born = System.currentTimeMillis();
+		born = Network.getClock();
 	}
 	
 	public Message(Address inTarget, String inBody) {
 		target = new LinkedList<Address>();
 		target.add(inTarget);
 		body = inBody;
-		born = System.currentTimeMillis();
+		born = Network.getClock();
 	}
 
 //---  Operations   ---------------------------------------------------------------------------
@@ -41,8 +41,8 @@ public class Message {
 	
 //---  Setter Methods   -----------------------------------------------------------------------
 		
-	public void setTimeStamp(long in) {
-		time = in;
+	public void setTimeStamp() {
+		time = Network.getClock();
 	}
 	
 //---  Getter Methods   -----------------------------------------------------------------------
@@ -68,16 +68,16 @@ public class Message {
 		return size;
 	}
 	
-	public long getTimeStamp() {
+	public int getTimeStamp() {
 		return time;
 	}
 	
-	public long getBirth() {
+	public int getBirth() {
 		return born;
 	}
 	
-	public double getAge(long t) {
-		return (t - getBirth()) / 1000.0;
+	public double getAge(int t) {
+		return (double)(Network.getClock() - getBirth()) / (double)Network.getRefreshRate();
 	}
 	
 //---  Mechanics   ----------------------------------------------------------------------------
@@ -89,7 +89,7 @@ public class Message {
 			Address s = target.get(i);
 			sb.append(s + (i + 1 < target.size() ? " -> " : "\n"));
 		}
-		sb.append("Time Stamp: " + getAge(time) + " sec\n");
+		sb.append("Born: " + (getBirth() / (double)Network.getRefreshRate()) + " sec, Time Alive: " + getAge(time) + " sec\n");
 		sb.append("Message: " + body + "\n");
 		return sb.toString();
 	}

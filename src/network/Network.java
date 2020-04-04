@@ -14,7 +14,7 @@ public class Network {
 	
 //---  Constants   ----------------------------------------------------------------------------
 	
-	private int refreshRate = 30;
+	private static int refreshRate = 30;
 	
 //---  Instance Variables   -------------------------------------------------------------------
 
@@ -23,6 +23,7 @@ public class Network {
 	private HashMap<String, Route> routes;
 	private Timer timer;
 	private boolean running;
+	public static int clock;
 	
 //---  Constructors   -------------------------------------------------------------------------
 	
@@ -32,6 +33,7 @@ public class Network {
 		routes = new HashMap<String, Route>();
 		timer = new Timer();
 		running = false;
+		clock = 0;
 	}
 	
 //---  Operations   ---------------------------------------------------------------------------
@@ -53,6 +55,7 @@ public class Network {
 	}
 	
 	private void runNetwork() {
+		clock += 1;
 		for(Node n : nodes.values()) {
 			n.operate();
 		}
@@ -140,6 +143,14 @@ public class Network {
 	
 	public Collection<Device> getDevices(){
 		return devices.values();
+	}
+	
+	public static int getClock() {
+		return clock;
+	}
+	
+	public static int getRefreshRate() {
+		return refreshRate;
 	}
 	
 //---  Mechanics   ----------------------------------------------------------------------------

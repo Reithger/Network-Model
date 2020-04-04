@@ -31,6 +31,7 @@ public class Map {
 	private final static Color DEVICE_COLOR = Color.yellow;
 	
 	private final static Font DISPLAY_FONT = new Font("Serif", Font.BOLD, 12);
+	private final static Font OVERLAY_FONT = new Font("Serif", Font.BOLD, 36);
 	
 	private final static int CODE_MOVE_UP = 1;
 	private final static int CODE_MOVE_LEFT = 2;
@@ -70,6 +71,8 @@ public class Map {
 	private HashMap<Integer, Integer> codeState;
 	private int[] interactCount;
 	
+//---  Constructors   -------------------------------------------------------------------------
+	
 	public Map() {
 		width = DEFAULT_WIDTH;
 		height = DEFAULT_HEIGHT;
@@ -91,7 +94,7 @@ public class Map {
 				handleClickInput(in);
 			}
 		};
-		frame.addPanelToScreen(panel);
+		frame.reservePanel("map", panel);
 		timer = new Timer();
 		timer.schedule(new TimerTask() {
 
@@ -103,6 +106,8 @@ public class Map {
 			
 		}, 0, REFRESH_RATE);
 	}
+	
+//---  Operations   ---------------------------------------------------------------------------
 	
 	public void command() {
 		return;
@@ -131,6 +136,8 @@ public class Map {
 		race = false;
 	}
 	
+//---  Draw Elements   ------------------------------------------------------------------------
+	
 	public void drawNode(Node n) {
 		int x = getXPosition(n.getX());
 		int y = getYPosition(n.getY());
@@ -147,8 +154,9 @@ public class Map {
 			case NODE_STATE_DISPLAY_NO:
 				break;
 			case NODE_STATE_DISPLAY_YES:
-				panel.addRectangle("active_display_rect_" + n.getName(), 10, x, y, code, code, true, Color.WHITE, Color.BLACK);
-				panel.addText("active_display_text_" + n.getName(), 11, x, y, width / 4, height / 5, n.toString(), DISPLAY_FONT, true, true, true);
+				panel.addButton("active_display_" + code + "_button", 9, x, y, width / 5, height / 8, code, true);
+				panel.addRectangle("active_display_" + code + "_rect", 10, x, y, width / 5, height / 8, true, Color.WHITE, Color.BLACK);
+				panel.addText("active_display_" + code + "_text", 11, x, y, width / 5, height / 8, n.toString(), DISPLAY_FONT, true, true, true);
 				break;
 			default:
 		}
@@ -181,7 +189,7 @@ public class Map {
 			double x = x1 + prog * a.distance(b) * Math.cos(angle);
 			double y = y1 + prog * a.distance(b) * Math.sin(angle);
 
-			panel.addRectangle("message_" + r.getName() + "_" + m.getTimeStamp(), 2, getXPosition(x), getYPosition(y), nodeSize / 4, nodeSize / 4, true, MESSAGE_COLOR);
+			panel.addRectangle("line_" + r.getName() + "_message_" + m.getTimeStamp(), 2, getXPosition(x), getYPosition(y), nodeSize / 4, nodeSize / 4, true, MESSAGE_COLOR);
 		}
 	}
 
@@ -209,11 +217,33 @@ public class Map {
 		panel.addButton("butt_move_left", 5, ovX - size, ovY, size, size, BUTTON_COLOR, CODE_MOVE_LEFT, true);
 		
 		panel.addButton("butt_zoom_in", 5, ovX - size, ovY + 5 * size / 2, size, size, BUTTON_COLOR, CODE_ZOOM_IN, true);
+		panel.addText("butt_zoom_in_text", 6, ovX - size, ovY + 5 * size / 2, 2*size, 2*size, "+", OVERLAY_FONT, true, true, true);
 		panel.addButton("butt_zoom_out", 5, ovX + size, ovY + 5 * size / 2, size, size, BUTTON_COLOR, CODE_ZOOM_OUT, true);
+		panel.addText("butt_zoom_out_text", 6, ovX + size, ovY + 5 * size / 2, 2*size, 2*size, "-", OVERLAY_FONT, true, true, true);
 		
 		panel.addButton("butt_pause", 5, ovX - size, ovY + 5 * size, size, size, BUTTON_COLOR, CODE_PAUSE, true);
 		panel.addButton("butt_start", 5, ovX + size, ovY + 5 * size, size, size, BUTTON_COLOR, CODE_START, true);
 	}
+
+//---  Getter Methods   -----------------------------------------------------------------------
+	
+	public int getMoveX() {
+		return (int)(width / zoom / 3);
+	}
+	
+	public int getMoveY() {
+		return (int)(height / zoom / 3);
+	}
+	
+	public int getZoom() {
+		return 5;
+	}
+	
+	public Network getNetwork() {
+		return net;
+	}
+	
+//---  Mechanics   ----------------------------------------------------------------------------
 	
 	public int getXPosition(double inX) {
 		return (int)(width / 2 + (inX - cX) / (width / zoom / 2) * (width / 2));
@@ -254,7 +284,6 @@ public class Map {
 	}
 
 	public void handleClickInput(int in) {
-		System.out.println(in);
 		if(in < CODE_RANGE_SIZE) {
 			switch(in) {
 				case CODE_MOVE_UP:
@@ -279,26 +308,28 @@ public class Map {
 					panel.removeElementPrefixed("grid");
 					break;
 				case CODE_PAUSE:
+					System.out.println("STOP");
 					net.stop();
 					break;
 				case CODE_START:
+					System.out.println("START");
 					net.start();
 					break;
 				default: break;
 			}
 		}
 		else {
-			System.out.println(codeState.get(in));
 			switch((int)(in / CODE_RANGE_SIZE)) {
 				case 0:
+					break;
+				case 1:
 					if(codeState.get(in) == NODE_STATE_DISPLAY_NO) {
 						codeState.put(in, NODE_STATE_DISPLAY_YES);
 					}
 					else {
 						codeState.put(in, NODE_STATE_DISPLAY_NO);
+						panel.removeElementPrefixed("active_display_");
 					}
-					break;
-				case 1:
 					break;
 				case 2:
 					break;
@@ -306,20 +337,4 @@ public class Map {
 		}
 	}
 
-	public int getMoveX() {
-		return (int)(width / zoom / 3);
-	}
-	
-	public int getMoveY() {
-		return (int)(height / zoom / 3);
-	}
-	
-	public int getZoom() {
-		return 5;
-	}
-	
-	public Network getNetwork() {
-		return net;
-	}
-	
 }

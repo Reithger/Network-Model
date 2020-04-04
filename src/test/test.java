@@ -19,7 +19,7 @@ public class test {
 		net2.addRoute("A", "B", 1, 1);
 		net2.addRoute("A", "C", 1, 1);
 		net2.addRoute("B", "D", 1, 1);
-		net2.addRoute("E", "B", 1, 1);
+		net2.addRoute("E", "C", 1, 1);
 
 		net2.start();
 		

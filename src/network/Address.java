@@ -1,7 +1,6 @@
 package network;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class Address {
 	
@@ -80,7 +79,6 @@ public class Address {
 //---  Mechanics   ----------------------------------------------------------------------------
 	
 	public boolean equals(Address a) {
-		System.out.println(a.getAddress() + " " + getAddress());
 		return getAddress().equals(a.getAddress());
 	}
 	

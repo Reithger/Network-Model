@@ -38,7 +38,7 @@ public class Route {
 	public void operate() {
 		for(int i = 0; i < messages.size(); i++) {
 			Message m = messages.get(i);
-			if(second(System.currentTimeMillis() - m.getTimeStamp()) >= messageDelay(m)) {
+			if(second(Network.getClock() - m.getTimeStamp()) >= messageDelay(m)) {
 				pick(m.getDestination(), true).receive(m);
 				messages.remove(m);
 				i--;
@@ -47,12 +47,12 @@ public class Route {
 	}
 	
 	public void send(Message m) {
-		m.setTimeStamp(System.currentTimeMillis());
+		m.setTimeStamp();
 		messages.add(m);
 	}
 
-	public double second(long in) {
-		return in / 1000.0;
+	public double second(int in) {
+		return in / (double)Network.getRefreshRate();
 	}
 	
 	public double messageDelay(Message m) {
@@ -68,7 +68,7 @@ public class Route {
 	}
 		
 	public double progress(Message m) {
-		return second(System.currentTimeMillis() - m.getTimeStamp()) / messageDelay(m);
+		return second(Network.getClock() - m.getTimeStamp()) / messageDelay(m);
 	}
 	
 	private Node pick(Address address, boolean same) {

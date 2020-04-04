@@ -45,7 +45,7 @@ public class Node {
 
 	public void operate() {
 		if(queue.size() > 0) {
-			if(second(System.currentTimeMillis() -  queue.peek().getTimeStamp()) >= (double)queue.peek().getSize() / getProcessing()) {
+			if(second(Network.getClock() - queue.peek().getTimeStamp()) >= (double)queue.peek().getSize() / getProcessing()) {
 				Message m = queue.poll();
 				send(m);
 				memoryUsed -= m.getSize();
@@ -62,13 +62,12 @@ public class Node {
 	}
 	
 	public void receive(Message m) {
-		System.out.println(name + " @ " + getAddress() + " received:\n" + m);
 		if(m.getSize() + getMemoryUsed() <= getMemoryMax()) {
 			memoryUsed += m.getSize();
 			while(m.getDestination() != null && m.getDestination().equals(address)) {
 				m.removeTopDestination();
 			}
-			m.setTimeStamp(System.currentTimeMillis());
+			m.setTimeStamp();
 			if(m.getDestination() != null) {
 				queue.add(m);	
 			}
@@ -88,7 +87,11 @@ public class Node {
 			System.out.println(getName() + " @ " + getAddress() + " sending:\n" + m + " to " + target + "\n");
 		}
 		catch(Exception e) {
-			System.out.println("Error Sending:\n" + m + "\nfrom " + getName() + " @ " + getAddress() + "\n");
+			System.out.println("Error Sending:\n" + m + "from " + getName() + " @ " + getAddress() + "\n");
+			Address target = protocolSend.decide(contacts.keySet(), m, getAddress()).tear();
+			System.out.println("Target: " + target);
+			System.out.println("Local: " + contacts.get(target.getAddress()));
+			System.out.println(contacts);
 			e.printStackTrace();
 		}
 	}
@@ -191,8 +194,8 @@ public class Node {
 		return sb.toString();
 	}
 	
-	public double second(long in) {
-		return in / 1000.0;
+	public double second(int in) {
+		return in / (double)Network.getRefreshRate();
 	}
 	
 }
