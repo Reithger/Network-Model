@@ -45,11 +45,13 @@ class NetworkTest {
 		System.out.println(a + "\n" + b);
 		System.out.println(a.prefixMatch(b));
 		
+		/*
 		Message m = new Message("1.2", "Hello");
 		Message m2 = new Message("1", "Yo");
 		Message m3 = new Message("1.1", "Hm");
-		System.out.println(m);
-		nodeB.receive(m);
+		*/
+		//System.out.println(m);
+		//nodeB.receive(m);
 		
 		Map map = new Map();
 		map.setNetwork(net);

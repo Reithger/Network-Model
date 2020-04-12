@@ -11,6 +11,7 @@ import network.Network;
 import network.Node;
 import network.Route;
 import network.message.Message;
+import network.protocol.message.SendProtocol;
 import visual.frame.WindowFrame;
 import visual.panel.ElementPanel;
 
@@ -18,6 +19,8 @@ public class Map {
 	
 	private final static int DEFAULT_WIDTH = 800;
 	private final static int DEFAULT_HEIGHT = 600;
+	private final static int DEFAULT_WIDTH_POPUP = 200;
+	private final static int DEFAULT_HEIGHT_POPUP = 200;
 	private final static int DEFAULT_ZOOM = 50;
 	private final static int DEFAULT_NODE_SIZE = 20;
 	private final static int DEFAULT_ROUTE_SIZE = 6;
@@ -31,7 +34,7 @@ public class Map {
 	private final static Color DEVICE_COLOR = Color.yellow;
 	
 	private final static Font DISPLAY_FONT = new Font("Serif", Font.BOLD, 12);
-	private final static Font OVERLAY_FONT = new Font("Serif", Font.BOLD, 36);
+	private final static Font OVERLAY_FONT = new Font("Serif", Font.BOLD, 24);
 	
 	private final static int CODE_MOVE_UP = 1;
 	private final static int CODE_MOVE_LEFT = 2;
@@ -41,15 +44,28 @@ public class Map {
 	private final static int CODE_ZOOM_OUT = 6;
 	private final static int CODE_START = 7;
 	private final static int CODE_PAUSE = 8;
+	private final static int CODE_SPEED_UP = 18;
+	private final static int CODE_SLOW_DOWN = 19;
+	private final static int CODE_ADD_NODE = 9;
+	private final static int CODE_ADD_ROUTE = 10;
+	private final static int CODE_ADD_DEVICE = 11;
+	private final static int CODE_REMOVE_NODE = 12;
+	private final static int CODE_REMOVE_ROUTE = 13;
+	private final static int CODE_REMOVE_DEVICE = 14;
+	private final static int CODE_EDIT_ITEM = 15;
+	
+	
+	private final static int CODE_POPUP_WINDOW_INITIAL = 100;
+	
 	private final static int CODE_RANGE_SIZE = 500;
 	private final static int CODE_NODE_RANGE = CODE_RANGE_SIZE * 1;
 	private final static int CODE_ROUTE_RANGE = CODE_RANGE_SIZE * 2;
 	private final static int CODE_MESSAGE_RANGE = CODE_RANGE_SIZE * 3;
 
-	private final static int INTERACTION_ENTITY_TYPE_COUNT = 3;
 	private final static int INTERACTION_ENTITY_TYPE_NODE = 0;
 	private final static int INTERACTION_ENTITY_TYPE_ROUTE = 1;
 	private final static int INTERACTION_ENTITY_TYPE_MESSAGE = 2;
+	private final static int INTERACTION_ENTITY_TYPE_COUNT = 3;
 	private final static int NODE_STATE_DEFAULT = 0;
 	private final static int NODE_STATE_DISPLAY_NO = 0;
 	private final static int NODE_STATE_DISPLAY_YES = 1;
@@ -60,6 +76,8 @@ public class Map {
 	
 	private int cX;
 	private int cY;
+	private int selectX;
+	private int selectY;
 	private int width;
 	private int height;
 	private int nodeSize;
@@ -90,7 +108,11 @@ public class Map {
 				handleKeyboardInput(in);
 			}
 			
-			public void clickBehaviour(int in) {
+			public void clickBehaviour(int in, int x, int y) {
+				if(in == -1) {
+					selectX = x;
+					selectY = y;
+				}
 				handleClickInput(in);
 			}
 		};
@@ -136,6 +158,10 @@ public class Map {
 		race = false;
 	}
 	
+	public void setSendProtocol(SendProtocol in) {
+		net.setSendProtocol(in);
+	}
+	
 //---  Draw Elements   ------------------------------------------------------------------------
 	
 	public void drawNode(Node n) {
@@ -170,22 +196,23 @@ public class Map {
 		panel.addLine("line_" + r.getName(), 1, getXPosition(a.getX()), getYPosition(a.getY()), getXPosition(b.getX()), getYPosition(b.getY()), routeSize, ROUTE_COLOR);
 		for(Message m : r.getMessages()) {
 			double x1, x2, y1, y2;
-			if(m.getDestination().equals(a.getAddress())) {
-				x1 = b.getX();
-				x2 = a.getX();
-				y1 = b.getY();
-				y2 = a.getY();
+			boolean direction = m.getDestination().equals(a.getAddress());
+			if(!direction) {
+				x1 = a.getX();
+				x2 = b.getX();
+				y1 = a.getY();
+				y2 = b.getY();
 			}
 			else {
-				x2 = b.getX();
-				x1 = a.getX();
-				y2 = b.getY();
-				y1 = a.getY();
+				x2 = a.getX();
+				x1 = b.getX();
+				y2 = a.getY();
+				y1 = b.getY();
 			}
 			double prog = r.progress(m);
 			double rise = y2 - y1;
 			double run = x2 - x1;
-			double angle = Math.atan(rise / run);
+			double angle = Math.atan2(rise, run);
 			double x = x1 + prog * a.distance(b) * Math.cos(angle);
 			double y = y1 + prog * a.distance(b) * Math.sin(angle);
 
@@ -211,18 +238,67 @@ public class Map {
 		int ovX = width * 9 / 10;
 		int ovY = height / 12;
 		int size = width / 30;
-		panel.addButton("butt_move_up", 5, ovX, ovY - size, size, size, BUTTON_COLOR, CODE_MOVE_UP, true);
-		panel.addButton("butt_move_down", 5, ovX, ovY + size, size, size, BUTTON_COLOR, CODE_MOVE_DOWN, true);
-		panel.addButton("butt_move_right", 5, ovX + size, ovY, size, size, BUTTON_COLOR, CODE_MOVE_RIGHT, true);
-		panel.addButton("butt_move_left", 5, ovX - size, ovY, size, size, BUTTON_COLOR, CODE_MOVE_LEFT, true);
+		int runningY = ovY;
+		int yDiff = 2 * size;
 		
-		panel.addButton("butt_zoom_in", 5, ovX - size, ovY + 5 * size / 2, size, size, BUTTON_COLOR, CODE_ZOOM_IN, true);
-		panel.addText("butt_zoom_in_text", 6, ovX - size, ovY + 5 * size / 2, 2*size, 2*size, "+", OVERLAY_FONT, true, true, true);
-		panel.addButton("butt_zoom_out", 5, ovX + size, ovY + 5 * size / 2, size, size, BUTTON_COLOR, CODE_ZOOM_OUT, true);
-		panel.addText("butt_zoom_out_text", 6, ovX + size, ovY + 5 * size / 2, 2*size, 2*size, "-", OVERLAY_FONT, true, true, true);
+		if(selectX >= 0) {
+			panel.addRectangle("select_position", 9, selectX, selectY, size, size, true, new Color(180, 40, 10));
+		}
+		else {
+			panel.removeElement("select_position");
+		}
 		
-		panel.addButton("butt_pause", 5, ovX - size, ovY + 5 * size, size, size, BUTTON_COLOR, CODE_PAUSE, true);
-		panel.addButton("butt_start", 5, ovX + size, ovY + 5 * size, size, size, BUTTON_COLOR, CODE_START, true);
+		//-- Navigation  --------------------------------------
+		
+			//Move viewpoint
+		panel.addImageButton("butt_move_up", 5, ovX, runningY - size, true, "/assets/UI/up_arrow.png", CODE_MOVE_UP);
+		panel.addImageButton("butt_move_right", 5, ovX + size, runningY, true, "/assets/UI/right_arrow.png", CODE_MOVE_RIGHT);
+		panel.addImageButton("butt_move_down", 5, ovX, runningY + size, true, "/assets/UI/down_arrow.png", CODE_MOVE_DOWN);
+		panel.addImageButton("butt_move_left", 5, ovX - size, runningY, true, "/assets/UI/left_arrow.png", CODE_MOVE_LEFT);
+		panel.addImage("UI_ring_movement", 5, ovX, runningY, true, "/assets/UI/UI_ring.png");
+		
+		runningY += yDiff + size;
+		
+			//Zoom in/out
+		panel.addImageButton("butt_zoom_in", 5, ovX - size, runningY, true, "/assets/UI/zoom_in.png", CODE_ZOOM_IN);
+		panel.addImageButton("butt_zoom_out", 5, ovX + size, runningY, true, "/assets/UI/zoom_out.png", CODE_ZOOM_OUT);
+
+		runningY += yDiff;
+		
+		//-- Control  -----------------------------------------
+		
+			//Pause/start
+		panel.addImageButton("butt_pause", 5, ovX - size, runningY, true, "/assets/UI/pause.png", CODE_PAUSE);
+		panel.addImageButton("butt_start", 5, ovX + size, runningY, true, "/assets/UI/start.png", CODE_START);
+		
+		runningY += yDiff;
+		
+			//Speed-up/Slow-down
+		panel.addImageButton("butt_slow_down", 5, ovX - size, runningY, true, "/assets/UI/slow_down.png", CODE_SLOW_DOWN);
+		panel.addImageButton("butt_speed_up", 5, ovX + size, runningY, true, "/assets/UI/speed_up.png", CODE_SPEED_UP);
+		
+		runningY += yDiff;
+		
+			//Add/remove Node
+		panel.addImageButton("butt_add_node", 5, ovX - size, runningY, true, "/assets/UI/add_node.png", CODE_ADD_NODE);
+		panel.addImageButton("butt_remove_node", 5, ovX + size, runningY, true, "/assets/UI/remove_node.png", CODE_REMOVE_NODE);
+		
+		runningY += yDiff;
+		
+			//Add/remove Route
+		panel.addImageButton("butt_add_route", 5, ovX - size, runningY, true, "/assets/UI/add_route.png", CODE_ADD_ROUTE);
+		panel.addImageButton("butt_remove_route", 5, ovX + size, runningY, true, "/assets/UI/remove_route.png", CODE_REMOVE_ROUTE);
+		
+		runningY += yDiff;
+		
+			//Add/remove Device
+		panel.addImageButton("butt_add_device", 5, ovX - size, runningY, true, "/assets/UI/add_device.png", CODE_ADD_DEVICE);
+		panel.addImageButton("butt_remove_device", 5, ovX + size, runningY, true, "/assets/UI/remove_device.png", CODE_REMOVE_DEVICE);
+		
+		runningY += yDiff;
+		
+			//See active element
+		
 	}
 
 //---  Getter Methods   -----------------------------------------------------------------------
@@ -246,13 +322,21 @@ public class Map {
 //---  Mechanics   ----------------------------------------------------------------------------
 	
 	public int getXPosition(double inX) {
-		return (int)(width / 2 + (inX - cX) / (width / zoom / 2) * (width / 2));
+		return (int)(width / 2 + (inX - cX) * zoom);
+	}
+	
+	public double referenceFrameX(int inX) {
+		return (inX - (width / 2)) / zoom + cX;
 	}
 	
 	public int getYPosition(double inY) {
-		return (int)(height / 2 - (inY - cY) / (height / zoom / 2) * (height / 2));
+		return (int)(height / 2 - (inY - cY) * zoom);
 	}
 	
+	public double referenceFrameY(int inY) {
+		return ((-1 * inY + (height / 2)) / zoom) + cY;
+	}
+		
 	public void handleKeyboardInput(char in) {
 		switch(in) {
 		case 'w' : 
@@ -315,7 +399,66 @@ public class Map {
 					System.out.println("START");
 					net.start();
 					break;
-				default: break;
+				case CODE_SPEED_UP:
+					net.speedUp();
+					break;
+				case CODE_SLOW_DOWN:
+					net.slowDown();
+					break;
+				case CODE_ADD_NODE:
+					String[] labels = new String[] {"name", "address", "X", "Y"};
+					String[] descriptions = new String[] {"Name", "Address", "X", "Y"};
+					String[] defaults = new String[] {"-", "-", referenceFrameX(selectX)+"", referenceFrameY(selectY)+""};
+					ElementPanel nodeAdd = new ElementPanel(0, 0, DEFAULT_WIDTH_POPUP, DEFAULT_HEIGHT_POPUP) {
+						public void keyBehaviour(char in) {
+							
+						}
+						
+						public void clickBehaviour(int in, int x, int y) {
+							if(in - CODE_POPUP_WINDOW_INITIAL == labels.length) {
+								Node n = new Node(this.getElementStoredText("node_creation_name"), this.getElementStoredText("node_creation_address"), Double.parseDouble(this.getElementStoredText("node_creation_X")), Double.parseDouble(this.getElementStoredText("node_creation_Y")));
+								n.setCommunicationProtocol(net.getSendProtocol());
+								net.addNode(n);
+								selectX = -1;
+								selectY = -1;
+								this.getParentFrame().disposeFrame();
+							}
+						}
+					};
+					addTextEntrySelection(nodeAdd, "node_creation", "Create Node", labels, descriptions, defaults, CODE_POPUP_WINDOW_INITIAL);
+					break;
+				case CODE_ADD_ROUTE:
+					String[] labelsRoute = new String[] {"node_a", "node_b", "upload", "stream"};
+					String[] descriptionsRoute = new String[] {"Node A", "Node B", "Upload Speed", "Stream Speed"};
+					String[] defaultsRoute = new String[] {"-", "-", "1.0", "1.0"};
+					ElementPanel routeAdd = new ElementPanel(0, 0, DEFAULT_WIDTH_POPUP, DEFAULT_HEIGHT_POPUP) {
+						public void keyBehaviour(char in) {
+							
+						}
+						
+						public void clickBehaviour(int in, int x, int y) {
+							if(in - CODE_POPUP_WINDOW_INITIAL == labelsRoute.length) {
+								net.addRoute(this.getElementStoredText("route_creation_node_a"), this.getElementStoredText("route_creation_node_b"), Double.parseDouble(this.getElementStoredText("route_creation_upload")), Double.parseDouble(this.getElementStoredText("route_creation_stream")));
+								this.getParentFrame().disposeFrame();
+							}
+						}
+					}; 
+					addTextEntrySelection(routeAdd, "route_creation", "Create Route", labelsRoute, descriptionsRoute, defaultsRoute, CODE_POPUP_WINDOW_INITIAL);
+				case CODE_ADD_DEVICE:
+					net.stop();
+					//TODO:
+					net.start();
+					break;
+				case CODE_REMOVE_NODE:
+					break;
+				case CODE_REMOVE_ROUTE:
+					break;
+				case CODE_REMOVE_DEVICE:
+					break;
+				case CODE_EDIT_ITEM:
+					break;
+				default: 
+					break;
 			}
 		}
 		else {
@@ -335,6 +478,30 @@ public class Map {
 					break;
 			}
 		}
+	}
+	
+	public void addTextEntrySelection(ElementPanel p, String name, String header, String[] labels, String[] descriptions, String[] defaults, int code) {
+		WindowFrame popupFrame = new WindowFrame(DEFAULT_WIDTH_POPUP, DEFAULT_HEIGHT_POPUP);
+		popupFrame.setExitOnClose(false);
+		
+		int x = DEFAULT_WIDTH_POPUP / 2;
+		int y = DEFAULT_HEIGHT_POPUP / 8;
+				
+		p.addText(name + "_header", 15, x, y, DEFAULT_WIDTH_POPUP / 2, DEFAULT_HEIGHT_POPUP / 10, header, DISPLAY_FONT, true, true, true);
+		
+		for(int i = 0; i < labels.length; i++) {
+			y += DEFAULT_HEIGHT_POPUP / 6;
+			
+			p.addText(name + "_" + labels[i] + "_text", 15, x, y - DEFAULT_HEIGHT_POPUP / 10, DEFAULT_WIDTH_POPUP * 2 / 3, DEFAULT_HEIGHT_POPUP / 10, descriptions[i], DISPLAY_FONT, true, true, true);
+			p.addRectangle(name + "_" + labels[i] + "_back", 14, x, y, DEFAULT_WIDTH_POPUP * 2 / 3, DEFAULT_HEIGHT_POPUP / 12, true, new Color(130, 130, 130));
+			p.addTextEntry(name + "_" + labels[i], 15, x, y, DEFAULT_WIDTH_POPUP * 2 / 3, DEFAULT_HEIGHT_POPUP / 12, code++, defaults[i], DISPLAY_FONT, true, true, true);
+		}
+
+		y += DEFAULT_HEIGHT_POPUP / 8;
+		
+		p.addButton(name + "_butt", 15, x, y, DEFAULT_WIDTH_POPUP / 4, DEFAULT_HEIGHT_POPUP / 8, new Color(130, 130, 130), code, true);
+
+		popupFrame.reservePanel("panel", p); 
 	}
 
 }

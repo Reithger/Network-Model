@@ -63,35 +63,27 @@ public class Node {
 	
 	public void receive(Message m) {
 		if(m.getSize() + getMemoryUsed() <= getMemoryMax()) {
-			memoryUsed += m.getSize();
-			while(m.getDestination() != null && m.getDestination().equals(address)) {
-				m.removeTopDestination();
-			}
+			m = protocolSend.processMessage(m);
 			m.setTimeStamp();
 			if(m.getDestination() != null) {
-				queue.add(m);	
+				queue.add(m);
+				memoryUsed += m.getSize();
 			}
-			else {
-				
-			}
+		}
+		else {
+			System.out.println("Error: Could not receive Message due to memory limitations");
+			System.out.println("Failed to send:\n" + m);
 		}
 	}
 	
 	public void send(Message m) {
 		try {
-			Address target = protocolSend.decide(contacts.keySet(), m, getAddress().tear());
-			if(!m.getDestination().equals(target)) {
-				m.addDestination(target);
-			}
-			contacts.get(target.getAddress()).send(m);
-			System.out.println(getName() + " @ " + getAddress() + " sending:\n" + m + " to " + target + "\n");
+			m = protocolSend.prepareMessage(m);
+			contacts.get(m.getDestination().getAddress()).send(m);
+			System.out.println(getName() + " @ " + getAddress() + " sending:\n" + m + " to " + m.getDestination() + "\n");
 		}
 		catch(Exception e) {
 			System.out.println("Error Sending:\n" + m + "from " + getName() + " @ " + getAddress() + "\n");
-			Address target = protocolSend.decide(contacts.keySet(), m, getAddress()).tear();
-			System.out.println("Target: " + target);
-			System.out.println("Local: " + contacts.get(target.getAddress()));
-			System.out.println(contacts);
 			e.printStackTrace();
 		}
 	}
@@ -111,7 +103,9 @@ public class Node {
 //---  Setter Methods   -----------------------------------------------------------------------
 
 	public void setCommunicationProtocol(SendProtocol in) {
-		protocolSend = in;
+		SendProtocol use = in.copy();
+		use.assignNode(this);
+		protocolSend = use;
 	}
 	
 	public void setX(double inX) {
@@ -182,6 +176,10 @@ public class Node {
 	
 	public Collection<Route> getContacts(){
 		return contacts.values();
+	}
+	
+	public Collection<String> getContactAddresses(){
+		return contacts.keySet();
 	}
 	
 //---  Mechanics   ----------------------------------------------------------------------------

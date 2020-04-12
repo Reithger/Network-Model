@@ -21,6 +21,8 @@ public class test {
 		net2.addRoute("B", "D", 1, 1);
 		net2.addRoute("E", "C", 1, 1);
 
+		net2.setSendProtocol(new TopToBottom());
+		
 		net2.start();
 		
 		String[] nodes = new String[] {"A", "B", "C", "D", "E"};
@@ -30,7 +32,7 @@ public class test {
 		
 		Map map = new Map() {
 			public void command() {
-				if(getNetwork() == null || rand.nextInt(50) != 4) {
+				if(getNetwork() == null || rand.nextInt(30) != 4) {
 					return;
 				}
 				getNetwork().sendMessageNode(nodes[rand.nextInt(nodes.length)], targets[rand.nextInt(targets.length)], "Hello");

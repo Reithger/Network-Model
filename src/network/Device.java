@@ -31,7 +31,9 @@ public class Device extends Node{
 	}
 	
 	public void sendMessage(String target, String body) {
-		Message m = new Message(target, body);
+		Message m = new Message();
+		m.addDestination(new Address(target));
+		m.setBody(body);
 		send(m);
 	}
 	

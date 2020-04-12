@@ -1,6 +1,5 @@
 package network;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 
 import network.message.Message;

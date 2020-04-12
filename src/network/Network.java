@@ -1,6 +1,5 @@
 package network;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Timer;
@@ -14,7 +13,7 @@ public class Network {
 	
 //---  Constants   ----------------------------------------------------------------------------
 	
-	private static int refreshRate = 30;
+	private static final int DEFAULT_REFRESH_RATE = 30;
 	
 //---  Instance Variables   -------------------------------------------------------------------
 
@@ -24,6 +23,8 @@ public class Network {
 	private Timer timer;
 	private boolean running;
 	public static int clock;
+	private SendProtocol protocolSend;
+	private static int refreshRate;
 	
 //---  Constructors   -------------------------------------------------------------------------
 	
@@ -34,6 +35,7 @@ public class Network {
 		timer = new Timer();
 		running = false;
 		clock = 0;
+		refreshRate = DEFAULT_REFRESH_RATE;
 	}
 	
 //---  Operations   ---------------------------------------------------------------------------
@@ -68,7 +70,28 @@ public class Network {
 	}
 	
 	public void sendMessageNode(String source, String target, String message) {
-		nodes.get(source).receive(new Message(target, message));
+		Message m = new Message();
+		m.setBody(message);
+		m.addDestination(new Address(target));
+		nodes.get(source).receive(m);
+	}
+	
+	public void setSendProtocol(SendProtocol in) {
+		protocolSend = in;
+	}
+	
+	public void speedUp() {
+		stop();
+		refreshRate += 15;
+		start();
+	}
+	
+	public void slowDown() {
+		if(refreshRate > 15) {
+			stop();
+			refreshRate -= 15;
+			start();
+		}
 	}
 	
 //---  Adder Methods   ------------------------------------------------------------------------
@@ -96,7 +119,7 @@ public class Network {
 		routes.put(add.getName(), add);
 	}
 	
-	public void addRoute(String nodeA, String nodeB, int upSpeed, int strmSpd) {
+	public void addRoute(String nodeA, String nodeB, double upSpeed, double strmSpd) {
 		Route r = nodes.get(nodeA).connect(nodes.get(nodeB), upSpeed, strmSpd);
 		addRoute(r);
 	}
@@ -150,7 +173,11 @@ public class Network {
 	}
 	
 	public static int getRefreshRate() {
-		return refreshRate;
+		return DEFAULT_REFRESH_RATE;
+	}
+	
+	public SendProtocol getSendProtocol() {
+		return protocolSend;
 	}
 	
 //---  Mechanics   ----------------------------------------------------------------------------

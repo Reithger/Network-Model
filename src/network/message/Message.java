@@ -9,26 +9,20 @@ public class Message {
 //---  Instance Variables   -------------------------------------------------------------------
 
 	private LinkedList<Address> target;
+	private String header;
 	private String body;
 	private int born;
 	private int time;
 	
 //---  Constructors   -------------------------------------------------------------------------
 	
-	public Message (String inTarget, String inBody) {
+	public Message() {
 		target = new LinkedList<Address>();
-		target.add(new Address(inTarget));
-		body = inBody;
+		header = "";
+		body = "";
 		born = Network.getClock();
 	}
 	
-	public Message(Address inTarget, String inBody) {
-		target = new LinkedList<Address>();
-		target.add(inTarget);
-		body = inBody;
-		born = Network.getClock();
-	}
-
 //---  Operations   ---------------------------------------------------------------------------
 	
 	public void addDestination(Address dest) {
@@ -45,6 +39,14 @@ public class Message {
 		time = Network.getClock();
 	}
 	
+	public void setHeader(String head) {
+		header = head;
+	}
+	
+	public void setBody(String bod) {
+		body = bod;
+	}
+	
 //---  Getter Methods   -----------------------------------------------------------------------
 	
 	public Address getDestination() {
@@ -56,7 +58,11 @@ public class Message {
 		}
 	}
 	
-	public String getContents() {
+	public String getHeader() {
+		return header;
+	}
+	
+	public String getBody() {
 		return body;
 	}
 	

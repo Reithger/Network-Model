@@ -35,8 +35,8 @@ public class OpenShortestPathFirst implements SendProtocol{
 //---  Operations   ---------------------------------------------------------------------------
 	
 	@Override
-	public Address decide(Collection<String> targets, Message m, Address defaultGateway) {
-		Address target = m.getDestination();
+	public Address decideTarget(Collection<String> targets, Address m, Address defaultGateway) {
+		
 		return null;
 	}
 	
@@ -53,6 +53,30 @@ public class OpenShortestPathFirst implements SendProtocol{
 	
 	public void setDefaultGateway(Address in) {
 		defaultGateway = in;
+	}
+
+	@Override
+	public Message processMessage(Message m) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Message prepareMessage(Message m) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void assignNode(Node n) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public SendProtocol copy() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 }
