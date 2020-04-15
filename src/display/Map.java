@@ -20,7 +20,7 @@ public class Map {
 	private final static int DEFAULT_WIDTH = 800;
 	private final static int DEFAULT_HEIGHT = 600;
 	private final static int DEFAULT_WIDTH_POPUP = 200;
-	private final static int DEFAULT_HEIGHT_POPUP = 200;
+	private final static int DEFAULT_HEIGHT_POPUP_SEGMENT = 30;
 	private final static int DEFAULT_ZOOM = 50;
 	private final static int DEFAULT_NODE_SIZE = 20;
 	private final static int DEFAULT_ROUTE_SIZE = 6;
@@ -60,15 +60,20 @@ public class Map {
 	private final static int CODE_RANGE_SIZE = 500;
 	private final static int CODE_NODE_RANGE = CODE_RANGE_SIZE * 1;
 	private final static int CODE_ROUTE_RANGE = CODE_RANGE_SIZE * 2;
-	private final static int CODE_MESSAGE_RANGE = CODE_RANGE_SIZE * 3;
+	private final static int CODE_DEVICE_RANGE = CODE_RANGE_SIZE * 3;
+	private final static int CODE_MESSAGE_RANGE = CODE_RANGE_SIZE * 4;
 
 	private final static int INTERACTION_ENTITY_TYPE_NODE = 0;
 	private final static int INTERACTION_ENTITY_TYPE_ROUTE = 1;
-	private final static int INTERACTION_ENTITY_TYPE_MESSAGE = 2;
-	private final static int INTERACTION_ENTITY_TYPE_COUNT = 3;
+	private final static int INTERACTION_ENTITY_TYPE_DEVICE = 2;
+	private final static int INTERACTION_ENTITY_TYPE_MESSAGE = 3;
+	private final static int INTERACTION_ENTITY_TYPE_COUNT = 4;
 	private final static int NODE_STATE_DEFAULT = 0;
 	private final static int NODE_STATE_DISPLAY_NO = 0;
 	private final static int NODE_STATE_DISPLAY_YES = 1;
+	private final static int DEVICE_STATE_DEFAULT = 0;
+	private final static int DEVICE_STATE_DISPLAY_NO = 0;
+	private final static int DEVICE_STATE_DISPLAY_YES = 1;
 	
 	private Network net;
 	private WindowFrame frame;
@@ -88,6 +93,7 @@ public class Map {
 	private HashMap<String, Integer> codeMap;
 	private HashMap<Integer, Integer> codeState;
 	private int[] interactCount;
+	private int age;
 	
 //---  Constructors   -------------------------------------------------------------------------
 	
@@ -124,6 +130,11 @@ public class Map {
 			public void run() {
 				updateMap();
 				command();
+				age++;
+				if(age > 300) {
+					age = 0;
+					panel.removeElementPrefixed("");
+				}
 			}
 			
 		}, 0, REFRESH_RATE);
@@ -180,9 +191,9 @@ public class Map {
 			case NODE_STATE_DISPLAY_NO:
 				break;
 			case NODE_STATE_DISPLAY_YES:
-				panel.addButton("active_display_" + code + "_button", 9, x, y, width / 5, height / 8, code, true);
-				panel.addRectangle("active_display_" + code + "_rect", 10, x, y, width / 5, height / 8, true, Color.WHITE, Color.BLACK);
-				panel.addText("active_display_" + code + "_text", 11, x, y, width / 5, height / 8, n.toString(), DISPLAY_FONT, true, true, true);
+				panel.addButton("active_display_" + code + "_button", 9, x, y, width / 5, height / 6, code, true);
+				panel.addRectangle("active_display_" + code + "_rect", 10, x, y, width / 5, height / 6, true, Color.WHITE, Color.BLACK);
+				panel.addText("active_display_" + code + "_text", 11, x, y, width / 5, height / 6, n.toString(), DISPLAY_FONT, true, true, true);
 				break;
 			default:
 		}
@@ -221,7 +232,30 @@ public class Map {
 	}
 
 	public void drawDevice(Device d) {
-		panel.addRectangle(d.getName() + "_rect", 2, getXPosition(d.getX()), getYPosition(d.getY()), nodeSize / 2, nodeSize / 2, true, DEVICE_COLOR);
+		int x = getXPosition(d.getX());
+		int y = getYPosition(d.getY());
+		if(codeMap.get(d.getName()) == null) {
+			codeMap.put(d.getName(), CODE_DEVICE_RANGE + interactCount[INTERACTION_ENTITY_TYPE_DEVICE]);
+			interactCount[INTERACTION_ENTITY_TYPE_DEVICE]++;
+		}
+		panel.addRectangle(d.getName() + "_rect", 3, x, y, nodeSize / 2, nodeSize / 2, true, DEVICE_COLOR);
+		panel.addButton(d.getName() + "_interact", 5, x, y, nodeSize, nodeSize, codeMap.get(d.getName()), true);
+		
+		int code = codeMap.get(d.getName());
+		if(codeState.get(code) == null) {
+			codeState.put(code, NODE_STATE_DEFAULT);
+		}
+		switch(codeState.get(code)) {
+			case NODE_STATE_DISPLAY_NO:
+				break;
+			case NODE_STATE_DISPLAY_YES:
+				panel.addButton("active_display_" + code + "_button", 9, x, y, width / 4, height / 5, code, true);
+				panel.addRectangle("active_display_" + code + "_rect", 10, x, y, width / 4, height / 5, true, Color.WHITE, Color.BLACK);
+				panel.addText("active_display_" + code + "_text", 11, x, y, width / 4, height / 5, d.toString(), DISPLAY_FONT, true, true, true);
+				break;
+			default:
+				break;
+	}
 	}
 	
 	public void grid() {
@@ -231,7 +265,6 @@ public class Map {
 		for(int j = cY - (int)(height / 2 / zoom); j <= cY + (int)(height / 2 / zoom); j++) {
 			panel.addRectangle("grid_h_" + j + "", 0, 0, getYPosition(j), width, 1, false, GRID_COLOR);
 		}
-	
 	}
 	
 	public void overlay() {
@@ -408,8 +441,8 @@ public class Map {
 				case CODE_ADD_NODE:
 					String[] labels = new String[] {"name", "address", "X", "Y"};
 					String[] descriptions = new String[] {"Name", "Address", "X", "Y"};
-					String[] defaults = new String[] {"-", "-", referenceFrameX(selectX)+"", referenceFrameY(selectY)+""};
-					ElementPanel nodeAdd = new ElementPanel(0, 0, DEFAULT_WIDTH_POPUP, DEFAULT_HEIGHT_POPUP) {
+					String[] defaults = new String[] {"", "", referenceFrameX(selectX)+"", referenceFrameY(selectY)+""};
+					ElementPanel nodeAdd = new ElementPanel(0, 0, DEFAULT_WIDTH_POPUP, DEFAULT_HEIGHT_POPUP_SEGMENT * (labels.length + 3)) {
 						public void keyBehaviour(char in) {
 							
 						}
@@ -417,10 +450,13 @@ public class Map {
 						public void clickBehaviour(int in, int x, int y) {
 							if(in - CODE_POPUP_WINDOW_INITIAL == labels.length) {
 								Node n = new Node(this.getElementStoredText("node_creation_name"), this.getElementStoredText("node_creation_address"), Double.parseDouble(this.getElementStoredText("node_creation_X")), Double.parseDouble(this.getElementStoredText("node_creation_Y")));
-								n.setCommunicationProtocol(net.getSendProtocol());
+								n.setCommunicationProtocol(net.getSendProtocol(net.SEND_PROTOCOL_TOPTOBOTTOM));
 								net.addNode(n);
 								selectX = -1;
 								selectY = -1;
+								this.getParentFrame().disposeFrame();
+							}
+							else if(in - CODE_POPUP_WINDOW_INITIAL == labels.length + 1) {
 								this.getParentFrame().disposeFrame();
 							}
 						}
@@ -430,8 +466,8 @@ public class Map {
 				case CODE_ADD_ROUTE:
 					String[] labelsRoute = new String[] {"node_a", "node_b", "upload", "stream"};
 					String[] descriptionsRoute = new String[] {"Node A", "Node B", "Upload Speed", "Stream Speed"};
-					String[] defaultsRoute = new String[] {"-", "-", "1.0", "1.0"};
-					ElementPanel routeAdd = new ElementPanel(0, 0, DEFAULT_WIDTH_POPUP, DEFAULT_HEIGHT_POPUP) {
+					String[] defaultsRoute = new String[] {"", "", "1.0", "1.0"};
+					ElementPanel routeAdd = new ElementPanel(0, 0, DEFAULT_WIDTH_POPUP, DEFAULT_HEIGHT_POPUP_SEGMENT * (labelsRoute.length + 3)) {
 						public void keyBehaviour(char in) {
 							
 						}
@@ -441,19 +477,101 @@ public class Map {
 								net.addRoute(this.getElementStoredText("route_creation_node_a"), this.getElementStoredText("route_creation_node_b"), Double.parseDouble(this.getElementStoredText("route_creation_upload")), Double.parseDouble(this.getElementStoredText("route_creation_stream")));
 								this.getParentFrame().disposeFrame();
 							}
+							else if(in - CODE_POPUP_WINDOW_INITIAL == labelsRoute.length + 1) {
+								this.getParentFrame().disposeFrame();
+							}
 						}
 					}; 
 					addTextEntrySelection(routeAdd, "route_creation", "Create Route", labelsRoute, descriptionsRoute, defaultsRoute, CODE_POPUP_WINDOW_INITIAL);
+					break;
 				case CODE_ADD_DEVICE:
-					net.stop();
-					//TODO:
-					net.start();
+					String[] labelsDev = new String[] {"name", "address", "contact", "X", "Y"};
+					String[] descriptionsDev = new String[] {"Name", "Address", "Contact", "X", "Y"};
+					String[] defaultsDev = new String[] {"", "", "", referenceFrameX(selectX)+"", referenceFrameY(selectY)+""};
+					ElementPanel devAdd = new ElementPanel(0, 0, DEFAULT_WIDTH_POPUP, DEFAULT_HEIGHT_POPUP_SEGMENT * (labelsDev.length + 3)) {
+						public void keyBehaviour(char in) {
+							
+						}
+						
+						public void clickBehaviour(int in, int x, int y) {
+							if(in - CODE_POPUP_WINDOW_INITIAL == labelsDev.length) {
+								net.addDevice(this.getElementStoredText("device_creation_name"), this.getElementStoredText("device_creation_address"), getElementStoredText("device_creation_contact"), Double.parseDouble(this.getElementStoredText("device_creation_X")), Double.parseDouble(this.getElementStoredText("device_creation_Y")), net.getSendProtocol(net.SEND_PROTOCOL_TOPTOBOTTOM), net.getMessagePattern(net.MESSAGE_PATTERN_EVENSPREAD));
+								selectX = -1;
+								selectY = -1;
+								this.getParentFrame().disposeFrame();
+							}
+							else if(in - CODE_POPUP_WINDOW_INITIAL == labelsDev.length + 1) {
+								this.getParentFrame().disposeFrame();
+							}
+						}
+					};
+					addTextEntrySelection(devAdd, "device_creation", "Create Node", labelsDev, descriptionsDev, defaultsDev, CODE_POPUP_WINDOW_INITIAL);
 					break;
 				case CODE_REMOVE_NODE:
+					String[] labelsRemoveNode = new String[] {"node"};
+					String[] descriptionsRemoveNode = new String[] {"Node"};
+					String[] defaultsRemoveNode = new String[] {""};
+					ElementPanel nodeRemove = new ElementPanel(0, 0, DEFAULT_WIDTH_POPUP, DEFAULT_HEIGHT_POPUP_SEGMENT * (labelsRemoveNode.length + 3)) {
+						public void keyBehaviour(char in) {
+							
+						}
+						
+						public void clickBehaviour(int in, int x, int y) {
+							if(in - CODE_POPUP_WINDOW_INITIAL == labelsRemoveNode.length) {
+								net.removeNode(this.getElementStoredText("node_removal_node"));
+								clearScreen();
+								this.getParentFrame().disposeFrame();
+							}
+							else if(in - CODE_POPUP_WINDOW_INITIAL == labelsRemoveNode.length + 1) {
+								this.getParentFrame().disposeFrame();
+							}
+						}
+					}; 
+					addTextEntrySelection(nodeRemove, "node_removal", "Delete Node", labelsRemoveNode, descriptionsRemoveNode, defaultsRemoveNode, CODE_POPUP_WINDOW_INITIAL);
 					break;
 				case CODE_REMOVE_ROUTE:
+					String[] labelsRemoveRoute = new String[] {"route"};
+					String[] descriptionsRemoveRoute = new String[] {"Route"};
+					String[] defaultsRemoveRoute = new String[] {""};
+					ElementPanel routeRemove = new ElementPanel(0, 0, DEFAULT_WIDTH_POPUP, DEFAULT_HEIGHT_POPUP_SEGMENT * (labelsRemoveRoute.length + 3)) {
+						public void keyBehaviour(char in) {
+							
+						}
+						
+						public void clickBehaviour(int in, int x, int y) {
+							if(in - CODE_POPUP_WINDOW_INITIAL == labelsRemoveRoute.length) {
+								net.removeRoute(this.getElementStoredText("route_removal_route"));
+								clearScreen();
+								this.getParentFrame().disposeFrame();
+							}
+							else if(in - CODE_POPUP_WINDOW_INITIAL == labelsRemoveRoute.length + 1) {
+								this.getParentFrame().disposeFrame();
+							}
+						}
+					}; 
+					addTextEntrySelection(routeRemove, "route_removal", "Delete Route", labelsRemoveRoute, descriptionsRemoveRoute, defaultsRemoveRoute, CODE_POPUP_WINDOW_INITIAL);
 					break;
 				case CODE_REMOVE_DEVICE:
+					String[] labelsRemoveDevice = new String[] {"device"};
+					String[] descriptionsRemoveDevice = new String[] {"Device"};
+					String[] defaultsRemoveDevice = new String[] {""};
+					ElementPanel deviceRemove = new ElementPanel(0, 0, DEFAULT_WIDTH_POPUP, DEFAULT_HEIGHT_POPUP_SEGMENT * (labelsRemoveDevice.length + 3)) {
+						public void keyBehaviour(char in) {
+							
+						}
+						
+						public void clickBehaviour(int in, int x, int y) {
+							if(in - CODE_POPUP_WINDOW_INITIAL == labelsRemoveDevice.length) {
+								net.removeDevice(this.getElementStoredText("device_removal_device"));
+								clearScreen();
+								this.getParentFrame().disposeFrame();
+							}
+							else if(in - CODE_POPUP_WINDOW_INITIAL == labelsRemoveDevice.length + 1) {
+								this.getParentFrame().disposeFrame();
+							}
+						}
+					}; 
+					addTextEntrySelection(deviceRemove, "device_removal", "Delete Device", labelsRemoveDevice, descriptionsRemoveDevice, defaultsRemoveDevice, CODE_POPUP_WINDOW_INITIAL);
 					break;
 				case CODE_EDIT_ITEM:
 					break;
@@ -476,32 +594,45 @@ public class Map {
 					break;
 				case 2:
 					break;
+				case 3:
+					if(codeState.get(in) == DEVICE_STATE_DISPLAY_NO) {
+						codeState.put(in, DEVICE_STATE_DISPLAY_YES);
+					}
+					else {
+						codeState.put(in, DEVICE_STATE_DISPLAY_NO);
+						panel.removeElementPrefixed("active_display_");
+					}
+					break;
 			}
 		}
 	}
 	
 	public void addTextEntrySelection(ElementPanel p, String name, String header, String[] labels, String[] descriptions, String[] defaults, int code) {
-		WindowFrame popupFrame = new WindowFrame(DEFAULT_WIDTH_POPUP, DEFAULT_HEIGHT_POPUP);
+		WindowFrame popupFrame = new WindowFrame(DEFAULT_WIDTH_POPUP, DEFAULT_HEIGHT_POPUP_SEGMENT * (labels.length + 3));
 		popupFrame.setExitOnClose(false);
-		
-		int x = DEFAULT_WIDTH_POPUP / 2;
-		int y = DEFAULT_HEIGHT_POPUP / 8;
 				
-		p.addText(name + "_header", 15, x, y, DEFAULT_WIDTH_POPUP / 2, DEFAULT_HEIGHT_POPUP / 10, header, DISPLAY_FONT, true, true, true);
+		int x = DEFAULT_WIDTH_POPUP / 2;
+		int y = DEFAULT_HEIGHT_POPUP_SEGMENT;
+				
+		p.addText(name + "_header", 15, x, y / 2, DEFAULT_WIDTH_POPUP / 2, DEFAULT_HEIGHT_POPUP_SEGMENT, header, DISPLAY_FONT, true, true, true);
 		
 		for(int i = 0; i < labels.length; i++) {
-			y += DEFAULT_HEIGHT_POPUP / 6;
+			y += DEFAULT_HEIGHT_POPUP_SEGMENT;
 			
-			p.addText(name + "_" + labels[i] + "_text", 15, x, y - DEFAULT_HEIGHT_POPUP / 10, DEFAULT_WIDTH_POPUP * 2 / 3, DEFAULT_HEIGHT_POPUP / 10, descriptions[i], DISPLAY_FONT, true, true, true);
-			p.addRectangle(name + "_" + labels[i] + "_back", 14, x, y, DEFAULT_WIDTH_POPUP * 2 / 3, DEFAULT_HEIGHT_POPUP / 12, true, new Color(130, 130, 130));
-			p.addTextEntry(name + "_" + labels[i], 15, x, y, DEFAULT_WIDTH_POPUP * 2 / 3, DEFAULT_HEIGHT_POPUP / 12, code++, defaults[i], DISPLAY_FONT, true, true, true);
+			p.addText(name + "_" + labels[i] + "_text", 15, x, y - DEFAULT_HEIGHT_POPUP_SEGMENT * 3 / 5, DEFAULT_WIDTH_POPUP, DEFAULT_HEIGHT_POPUP_SEGMENT * 3 / 5, descriptions[i], DISPLAY_FONT, true, true, true);
+			p.addRectangle(name + "_" + labels[i] + "_back", 14, x, y, DEFAULT_WIDTH_POPUP * 3 / 5, DEFAULT_HEIGHT_POPUP_SEGMENT * 3 / 5, true, new Color(130, 130, 130));
+			p.addTextEntry(name + "_" + labels[i], 15, x, y, DEFAULT_WIDTH_POPUP * 3 / 5, DEFAULT_HEIGHT_POPUP_SEGMENT * 4 / 5, code++, defaults[i], DISPLAY_FONT, true, true, true);
 		}
 
-		y += DEFAULT_HEIGHT_POPUP / 8;
+		y += DEFAULT_HEIGHT_POPUP_SEGMENT;
 		
-		p.addButton(name + "_butt", 15, x, y, DEFAULT_WIDTH_POPUP / 4, DEFAULT_HEIGHT_POPUP / 8, new Color(130, 130, 130), code, true);
-
+		p.addButton(name + "_butt", 15, x - DEFAULT_WIDTH_POPUP / 4, y, DEFAULT_WIDTH_POPUP / 4, DEFAULT_HEIGHT_POPUP_SEGMENT * 3 / 5, new Color(0, 130, 0), code++, true);
+		p.addButton(name + "_butt_cancel", 15, x + DEFAULT_WIDTH_POPUP / 4, y, DEFAULT_WIDTH_POPUP / 4, DEFAULT_HEIGHT_POPUP_SEGMENT * 3 / 5, new Color(130, 0, 0), code, true);
 		popupFrame.reservePanel("panel", p); 
 	}
 
+	public void clearScreen() {
+		panel.removeElementPrefixed("");
+	}
+	
 }

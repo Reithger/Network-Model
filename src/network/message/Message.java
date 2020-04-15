@@ -96,7 +96,8 @@ public class Message {
 			sb.append(s + (i + 1 < target.size() ? " -> " : "\n"));
 		}
 		sb.append("Born: " + (getBirth() / (double)Network.getRefreshRate()) + " sec, Time Alive: " + getAge(time) + " sec\n");
-		sb.append("Message: " + body + "\n");
+		sb.append("Header: " + header + "\n");
+		sb.append("Body: " + body + "\n");
 		return sb.toString();
 	}
 	

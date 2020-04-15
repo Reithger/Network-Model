@@ -4,6 +4,8 @@ import java.util.ArrayList;
 
 public class Address {
 	
+	public final static Address WILDCARD = new Address("*");
+	
 //---  Instance Variables   -------------------------------------------------------------------
 
 	private ArrayList<String> points;

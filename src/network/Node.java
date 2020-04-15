@@ -10,7 +10,6 @@ public class Node {
 	
 //---  Constant Values   ----------------------------------------------------------------------
 	
-	private final static int FAIL_CAP = 50;
 	private final static int DEFAULT_PROCESSING = 6;
 
 //---  Instance Variables   -------------------------------------------------------------------
@@ -48,7 +47,6 @@ public class Node {
 			if(second(Network.getClock() - queue.peek().getTimeStamp()) >= (double)queue.peek().getSize() / getProcessing()) {
 				Message m = queue.poll();
 				send(m);
-				memoryUsed -= m.getSize();
 			}
 		}
 	}
@@ -61,9 +59,16 @@ public class Node {
 		return rt;
 	}
 	
+	public void disconnect(Route r) {
+		contacts.remove(r.getName());
+	}
+	
 	public void receive(Message m) {
 		if(m.getSize() + getMemoryUsed() <= getMemoryMax()) {
 			m = protocolSend.processMessage(m);
+			if(m == null) {
+				return;
+			}
 			m.setTimeStamp();
 			if(m.getDestination() != null) {
 				queue.add(m);
@@ -78,6 +83,7 @@ public class Node {
 	
 	public void send(Message m) {
 		try {
+			changeMemoryUsed(-1 * m.getSize());
 			m = protocolSend.prepareMessage(m);
 			contacts.get(m.getDestination().getAddress()).send(m);
 			System.out.println(getName() + " @ " + getAddress() + " sending:\n" + m + " to " + m.getDestination() + "\n");
@@ -96,8 +102,8 @@ public class Node {
 		return Math.sqrt(Math.pow(getX() - other.getX(), 2) + Math.pow(getY() - other.getY(), 2));
 	}
 	
-	public boolean endpoint() {
-		return false;
+	public void changeMemoryUsed(int in) {
+		memoryUsed += in;
 	}
 	
 //---  Setter Methods   -----------------------------------------------------------------------
@@ -187,7 +193,8 @@ public class Node {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("Name: " + getName() + ", Address: " + getAddress() + "\n");
-		sb.append("Processing: " + getProcessing() + ", Memory Max: " + getMemoryMax() + "\n");
+		sb.append("Memory Used: " + getMemoryUsed() + ", Memory Max: " + getMemoryMax() + "\n");
+		sb.append("Processing: " + getProcessing() + "\n");
 		sb.append("X: " + getX() + ", Y: " + getY() + "\n");
 		return sb.toString();
 	}

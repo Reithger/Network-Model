@@ -6,14 +6,20 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import network.message.Message;
+import network.protocol.device.EvenSpread;
 import network.protocol.device.MessagePattern;
 import network.protocol.message.SendProtocol;
+import network.protocol.message.TopToBottom;
 
 public class Network {
 	
 //---  Constants   ----------------------------------------------------------------------------
 	
 	private static final int DEFAULT_REFRESH_RATE = 30;
+	private static final SendProtocol[] SEND_PROTOCOL = new SendProtocol[] {new TopToBottom() };
+	public final int SEND_PROTOCOL_TOPTOBOTTOM = 0;
+	private static final MessagePattern[] MESSAGE_PATTERNS = new MessagePattern[] {new EvenSpread() };
+	public final int MESSAGE_PATTERN_EVENSPREAD = 0;
 	
 //---  Instance Variables   -------------------------------------------------------------------
 
@@ -62,6 +68,9 @@ public class Network {
 			n.operate();
 		}
 		for(Route r : routes.values()) {
+			if(r == null || r.getName() == null) {
+				continue;
+			}
 			r.operate();
 		}
 		for(Device d : devices.values()) {
@@ -110,9 +119,12 @@ public class Network {
 		devices.put(add.getName(), add);
 	}
 
-	public void addDevice(String name, String address, double x, double y, MessagePattern mP) {
+	public void addDevice(String name, String address, String connection, double x, double y, SendProtocol sP, MessagePattern mP) {
 		Device d = new Device(name, address, x , y, mP);
+		d.setCommunicationProtocol(sP);
 		addDevice(d);
+		Route r = d.connect(nodes.get(connection), 10, 10);
+		addRoute(r);
 	}
 	
 	public void addRoute(Route add) {
@@ -127,27 +139,44 @@ public class Network {
 //---  Remover Methods   -----------------------------------------------------------------------
 	
 	public void removeNode(Node remove) {
+		if(remove == null) {
+			return;
+		}
+		for(Route r : remove.getContacts()) {
+			removeRoute(r);
+		}
 		nodes.remove(remove.getName());
 	}
 	
 	public void removeNode(String remove) {
-		nodes.remove(remove);
+		Node rem = nodes.get(remove);
+		removeNode(rem);
 	}
 	
 	public void removeDevice(Device remove) {
+		if(remove == null) {
+			return;
+		}
+		for(Route r : remove.getContacts()) {
+			removeRoute(r);
+		}
 		devices.remove(remove.getName());
 	}
 	
 	public void removeDevice(String remove) {
-		devices.remove(remove);
+		removeDevice(devices.get(remove));
 	}
 	
 	public void removeRoute(Route remove) {
+		if(remove == null) {
+			return;
+		}
+		remove.destroy();
 		routes.remove(remove.getName());
 	}
 	
 	public void removeRoute(String remove) {
-		routes.remove(remove);
+		removeRoute(routes.get(remove));
 	}
 	
 //---  Getter Methods   -----------------------------------------------------------------------
@@ -176,8 +205,12 @@ public class Network {
 		return DEFAULT_REFRESH_RATE;
 	}
 	
-	public SendProtocol getSendProtocol() {
-		return protocolSend;
+	public SendProtocol getSendProtocol(int index) {
+		return SEND_PROTOCOL[index];
+	}
+	
+	public MessagePattern getMessagePattern(int index) {
+		return MESSAGE_PATTERNS[index];
 	}
 	
 //---  Mechanics   ----------------------------------------------------------------------------

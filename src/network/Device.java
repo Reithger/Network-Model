@@ -16,7 +16,8 @@ public class Device extends Node{
 	
 	public Device(String inName, String inAddress, double inX, double inY, MessagePattern inMP) {
 		super(inName, inAddress, inX, inY);
-		mp = inMP;
+		mp = inMP.copy();
+		mp.setDevice(this);
 		rand = new Random();
 	}
 	
@@ -26,28 +27,33 @@ public class Device extends Node{
 	public void operate() {
 		int seed = rand.nextInt(30);
 		if(seed == 15) {
-			sendMessage(mp.chooseTarget(), mp.chooseBody());
+			Message m = new Message();
+			m = mp.chooseTarget(m);
+			if(m == null) {
+				return;
+			}
+			m = mp.writeHeader(m);
+			m = mp.chooseBody(m);
+			send(m);
 		}
 	}
 	
-	public void sendMessage(String target, String body) {
-		Message m = new Message();
-		m.addDestination(new Address(target));
-		m.setBody(body);
-		send(m);
+	@Override
+	public void receive(Message m) {
+		mp.receiveMessage(m);
+	}
+		
+	@Override
+	public void changeMemoryUsed(int in) {
+		return;
 	}
 	
-	@Override
-	public boolean endpoint() {
-		return true;
-	}
-
 //---  Mechanics   ----------------------------------------------------------------------------
 	
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(super.toString());
-		
+		sb.append(mp.toString());
 		return sb.toString();
 	}
 	

@@ -59,11 +59,11 @@ public class Route {
 	}
 	
 	public double propogationDelay(Message m) {
-		return getUploadSpeed() * m.getSize();
+		return m.getSize() / this.getUploadSpeed();
 	}
 	
 	public double travelTime() {
-		return getDistance() * getStreamSpeed(); 
+		return getDistance() / getStreamSpeed(); 
 	}
 		
 	public double progress(Message m) {
@@ -92,6 +92,11 @@ public class Route {
 		else {
 			return null;
 		}
+	}
+	
+	public void destroy() {
+		endOne.disconnect(this);
+		endTwo.disconnect(this);
 	}
 	
 //---  Getter Methods   -----------------------------------------------------------------------
