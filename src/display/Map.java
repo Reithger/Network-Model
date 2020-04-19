@@ -2,6 +2,8 @@ package display;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.Graphics;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -121,6 +123,7 @@ public class Map {
 				}
 				handleClickInput(in);
 			}
+			
 		};
 		frame.reservePanel("map", panel);
 		timer = new Timer();
@@ -203,9 +206,11 @@ public class Map {
 	public void drawRoute(Route r) {
 		Node a = r.getFirstNode();
 		Node b = r.getSecondNode();
-		panel.removeElementPrefixed("line_" + r.getName());
+		panel.removeElementPrefixed("line_message_" + r.getName());
 		panel.addLine("line_" + r.getName(), 1, getXPosition(a.getX()), getYPosition(a.getY()), getXPosition(b.getX()), getYPosition(b.getY()), routeSize, ROUTE_COLOR);
-		for(Message m : r.getMessages()) {
+		ArrayList<Message> messages = new ArrayList<Message>(r.getMessages());
+		for(int i = 0; i < messages.size(); i++) {
+			Message m = messages.get(i);
 			double x1, x2, y1, y2;
 			boolean direction = m.getDestination().equals(a.getAddress());
 			if(!direction) {
@@ -227,7 +232,7 @@ public class Map {
 			double x = x1 + prog * a.distance(b) * Math.cos(angle);
 			double y = y1 + prog * a.distance(b) * Math.sin(angle);
 
-			panel.addRectangle("line_" + r.getName() + "_message_" + m.getTimeStamp(), 2, getXPosition(x), getYPosition(y), nodeSize / 4, nodeSize / 4, true, MESSAGE_COLOR);
+			panel.addRectangle("line_message_" + r.getName() + m.getTimeStamp(), 2, getXPosition(x), getYPosition(y), nodeSize / 4, nodeSize / 4, true, MESSAGE_COLOR);
 		}
 	}
 

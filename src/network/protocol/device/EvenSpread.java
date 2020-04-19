@@ -76,7 +76,6 @@ public class EvenSpread implements MessagePattern{
 	@Override
 	public void receiveMessage(Message m) {
 		String[] data = m.getHeader().split("\n");
-		System.out.println("RECEIVED: \n" + m);
 		switch(data[0]) {
 			case "Explore":
 				Message ret = new Message();

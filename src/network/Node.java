@@ -86,7 +86,6 @@ public class Node {
 			changeMemoryUsed(-1 * m.getSize());
 			m = protocolSend.prepareMessage(m);
 			contacts.get(m.getDestination().getAddress()).send(m);
-			System.out.println(getName() + " @ " + getAddress() + " sending:\n" + m + " to " + m.getDestination() + "\n");
 		}
 		catch(Exception e) {
 			System.out.println("Error Sending:\n" + m + "from " + getName() + " @ " + getAddress() + "\n");
